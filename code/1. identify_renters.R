@@ -25,18 +25,14 @@ library("postmastr")
 # Read in residential parcels from LA county API: takes about 30 minutes
 # parcels <- read.socrata(
 #   "https://data.lacounty.gov/resource/42ne-gwcj.json?$where=usecodedescchar2 not in('Single Family Residence')",
-#   app_token = "yhhkDuSxdoO7HwDyuvHI8RQOd",
-#   email     = "trevor.incerti@yale.edu",
-#   password  = "sarkeC-1sozto-nupwom"
+#   app_token = "INSERT APP TOKEN HERE",
+#   email     = "INSERT EMAIL HERE",
+#   password  = "INSERT PASSWORD HERE"
 # )
-
-# save(parcels, file = "data/la_county_parcels.RData")
 
 # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
 # CLEAN DATA ----
 # ______________________________________________________________________________
-
-load("data/la_county_parcels.RData")
 
 parcels_clean <- parcels %>% 
   filter( # Remove non-residential buildings and those without addresses
