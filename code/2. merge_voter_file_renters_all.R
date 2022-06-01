@@ -7,6 +7,9 @@
 # This code imports the LA County voter file and merges with LA County
 # parcel data records of mult-iunit apartment buildings
 
+# NOTE: VOTER FILE NOT INCLUDED IN DATA FOLDER AS PROPRIETARY INFORMATION.
+# THIS SCRIPT THEREFORE CONTAINS REPLICATION CODE ONLY!
+
 # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
 # LIBRARIES ----
 # ______________________________________________________________________________

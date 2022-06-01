@@ -6,6 +6,9 @@
 
 # This code cleans the merged voter file
 
+# NOTE: VOTER FILE NOT INCLUDED IN DATA FOLDER AS PROPRIETARY INFORMATION.
+# THIS SCRIPT THEREFORE CONTAINS REPLICATION CODE ONLY!
+
 # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
 # LIBRARIES AND FUNCTIONS ----
 # ______________________________________________________________________________
