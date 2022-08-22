@@ -32,7 +32,7 @@ source("code/0. functions.R")
 # ______________________________________________________________________________
 
 #### Import files ####
-load("data/assignments/random_assignment.Rdata")
+load("data/random_assignment.Rdata")
 
 # Filter to treated cities only
 treated_cities <- c("SANTA MONICA", "BEVERLY HILLS", "WHITTIER", 
@@ -73,7 +73,7 @@ rm(email_out, email_treat)
 # ______________________________________________________________________________
 
 #### Import covariates ####
-load("data/cleaned/vf_clean.Rdata")
+load("data/vf_clean.Rdata")
 
 vf_clean <- vf_clean %>%
   filter(likely_renter == 1) %>%

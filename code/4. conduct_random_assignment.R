@@ -32,7 +32,7 @@ set.seed(999)
 source("code/0. functions.R")
 
 # Import clened voter file data
-load("data/cleaned/vf_clean.Rdata")
+load("data/vf_clean.Rdata")
 
 # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
 # FILTER TO LIKELY RENTERS WITH EMAIL ONLY ----
@@ -102,7 +102,7 @@ full_ra <- vf_clean %>%
   select(random_id, email, name_first, name_last, treatment, city, address, 
          treated)
 
-save(full_ra, file = "data/assignments/random_assignment.Rdata")
+save(full_ra, file = "data/random_assignment.Rdata")
 
 # Save by city and treatment status for export to email software
 email_export <- vf_clean %>% 
