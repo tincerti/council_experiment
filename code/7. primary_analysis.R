@@ -6,6 +6,9 @@
 
 # This file analyzes the results from email experiments
 
+# NOTE: NAMES AND AND EMAIL ADDRESSES HAVE BEEN REMOVED FROM THE DATA
+# HOME ADDRESSES HAVE BEEN CONVERTED TO UNIQUE RANDOM IDS
+
 # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
 # LIBRARIES ----
 # ______________________________________________________________________________
@@ -28,8 +31,7 @@ options(scipen=999)
 source("code/0. functions.R")
 
 # Import data
-#email <- read_csv("data/outcomes/sm_outcomes.csv")
-comments <- read_csv("data/outcomes/comments.csv")
+comments <- read_csv("data/comments.csv")
 
 # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
 # FINAL DATA PREP ----

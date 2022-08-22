@@ -25,7 +25,7 @@ options(scipen=999)
 source("code/0. functions.R")
 
 # Import data
-comments <- read_csv("data/outcomes/comments.csv")
+comments <- read_csv("data/comments.csv")
 
 # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
 # FINAL DATA PREP ----

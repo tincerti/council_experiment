@@ -30,8 +30,8 @@ source("code/0. functions.R")
 # ______________________________________________________________________________
 
 # Import data
-pilot <- read_csv("data/outcomes/pilot/pilot_outcomes.csv")
-comments <- read_csv("data/outcomes/comments.csv")
+pilot <- read_csv("data/pilot_outcomes.csv")
+comments <- read_csv("data/comments.csv")
 
 # Create indicator for pilot studies and merge 
 pilot <- pilot %>% 

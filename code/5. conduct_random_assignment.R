@@ -6,6 +6,17 @@
 
 # This code conducts the random assignment procedure
 
+# NOTE: VOTER FILE NOT INCLUDED IN DATA FOLDER AS PROPRIETARY INFORMATION.
+# RANDOM ASSIGNMENT DATA INCLUDES INDIVIDUAL NAMES AND EMAIL ADDRESSES
+# THIS SCRIPT THEREFORE CONTAINS REPLICATION CODE ONLY!
+
+# AN ANONYMIZED VERSION WITH NO PERSONALLY IDENTIFYING INFORMATION CAN BE 
+# FOUND IN vf_clean.Rdata (I.E. RANDOM IDS, COVARIATE VALUES,
+# AND RENTER IDENTIFICATION ONLY)
+
+# AN ANONYMIZED VERSION OF THE RANDOM ASSIGMENT CAN BE FOUND IN 
+# random_assignment.Rdata
+
 # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
 # LIBRARIES AND IMPORT ----
 # ______________________________________________________________________________

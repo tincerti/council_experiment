@@ -24,7 +24,7 @@ options(scipen=999)
 source("code/0. functions.R")
 
 # Import comment data
-comments <- read_csv("data/outcomes/comments.csv")
+comments <- read_csv("data/comments.csv")
 
 # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
 # SPOKEN VS WRITTEN, PRO VS. ANTI HOUSING, AND PRE-WRITTEN VS CUSTOM ----
@@ -83,7 +83,7 @@ ggsave(file="figs/pro_anti_custom.pdf", height = 4.5, width = 7)
 # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
 # SUBSTANTIVE CHANGE ----
 # ______________________________________________________________________________
-tally <- readxl::read_excel("data/outcomes/commenters/comments_tally.xlsx") %>%
+tally <- readxl::read_excel("data/comments_tally.xlsx") %>%
   select(-City, -Date, -`Treatment pro-housing comments`,
          -`Comment increase (%)`, -`Pro-housing comment increase (%)`)
 
@@ -100,7 +100,7 @@ perc_scale = function(x) (x/1)
 unit_scale = function(x) (x - min(x)) / (100 - min(x))
 
 
-readxl::read_excel("data/outcomes/commenters/comments_tally.xlsx") %>%
+readxl::read_excel("data//comments_tally.xlsx") %>%
   select(-City, -Date, -`Treatment anti-housing comments`,
          -`Treatment pro-housing comments`,
          -`Comment increase (%)`, -`Pro-housing comment increase (%)`) %>%

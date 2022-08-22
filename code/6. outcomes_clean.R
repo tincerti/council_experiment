@@ -6,6 +6,16 @@
 
 # This prepares the outcome data for analysis
 
+# NOTE: MATCHING TREATMENT STATUS WITH OUTCOMES IS CONDUCTED ON INDIVIDUAL NAMES
+# AND EMAIL ADDRESSES. THIS SCRIPT THEREFORE CONTAINS REPLICATION CODE ONLY!
+
+# AN ANONYMIZED VERSION WITH NO PERSONALLY IDENTIFYING INFORMATION CAN BE 
+# FOUND IN vf_clean.Rdata (I.E. RANDOM IDS, COVARIATE VALUES,
+# AND RENTER IDENTIFICATION ONLY)
+
+# AN ANONYMIZED VERSION OF THE RANDOM ASSIGMENT CAN BE FOUND IN 
+# random_assignment.Rdata
+
 # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
 # LIBRARIES ----
 # ______________________________________________________________________________

@@ -10,12 +10,6 @@
 # LIBRARIES ----
 # ______________________________________________________________________________
 
-# Install any required packages
-list.of.packages <- c("tidyverse", "DeclareDesign", "modelsummary", 
-                      "kableExtra", "formattable", "gridExtra")
-new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
-if(length(new.packages)) install.packages(new.packages)
-
 # Load libraries
 library(tidyverse)
 library(DeclareDesign)
@@ -32,7 +26,7 @@ set.seed(999)
 source("code/0. functions.R")
 
 # Import data
-comments <- read_csv("data/outcomes/comments.csv")
+comments <- read_csv("data/comments.csv")
 
 # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
 # FINAL DATA PREP ----
@@ -146,23 +140,3 @@ modelsummary(vh, stars = TRUE,
   #kable_styling(latex_options = c("scale_down")) %>%
   row_spec(c(1,3,5,7), background = '#D3D3D3') %>%
   save_kable("tables/cate_table.tex")
-
-# ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
-# HETEROGENOUS TREATMENT EFFECTS: EXPLORATORY (NOT PRE-REGISTERED)  ----
-# ______________________________________________________________________________
-
-# Partisanship: CATEs
-lm_robust(comment ~ treated + dem +  treated:dem, fixed_effects = ~city,
-          data = comments, subset = opened == 1, clusters = address)
-
-lm_robust(comment ~ treated + rep + treated:rep, fixed_effects = ~city,
-          data = comments, subset = opened == 1, clusters = address)
-
-# Partisanship: assumptions
-lm_robust(comment ~ dem, data = comments, 
-          subset = opened == 1 & treated == 1, clusters = address)
-
-lm_robust(comment ~ rep, data = comments, 
-          subset = opened == 1 & treated == 1, clusters = address)
-
-
