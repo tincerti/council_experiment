@@ -4,7 +4,7 @@ Replication code and data for ‘"Combatting capture in local politics: Evidence
 
 Note that while replication code is available for the creation of the identified renter sample (i.e., merging the voter file with Los Angeles Department of City Planning records of multi- unit housing developments), the full voter file cannot be provided for both legal and ethical reasons. However, all data used in the analyses are available in anonymized form.
 
-### Replication Code
+### Replication Code (relative path "~/code")
 
 0. Functions.R
 - Note: This file does not need to be run as it is loaded by other .R files. 
