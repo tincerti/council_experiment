@@ -1,6 +1,6 @@
 # council_experiment
 
-Replication code and data for ‘"Combatting capture in local politics: Evidence from eight field experiments."
+Replication code and data for ‘"Countering capture in local politics: Evidence from eight field experiments."
 
 Note that while replication code is available for the creation of the identified renter sample (i.e., merging the voter file with Los Angeles Department of City Planning records of multi- unit housing developments), the full voter file cannot be provided for both legal and ethical reasons. However, all data used in the analyses are available in anonymized form.
 
