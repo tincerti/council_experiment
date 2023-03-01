@@ -104,6 +104,21 @@ linearHypothesis(cace, "treatmentTreatment 3 - treatmentTreatment 2 = 0")
 linearHypothesis(cace, "treatmentTreatment 2 - treatmentTreatment 1 = 0")
 linearHypothesis(cace, "treatmentTreatment 3 - treatmentTreatment 1 = 0")
 
+# Cost treatments compared to information treatment
+comments <- comments %>%
+  mutate(
+    cost_treatment = case_when(
+      treatment == "Placebo" ~ "Placebo",
+      treatment == "Treatment 1" ~ "Information",
+      TRUE ~ "Cost"),
+    cost_treatment = factor(cost_treatment, c("Placebo", "Information", "Cost"))
+  )
+
+cost_any = lm_robust(comment ~ cost_treatment, fixed_effects = ~ city,
+                     data = comments, subset = opened == 1, clusters = address)
+
+linearHypothesis(cost_any, "cost_treatmentCost - cost_treatmentInformation = 0")
+
 # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
 # CREATE FIGURES ----
 # ______________________________________________________________________________
