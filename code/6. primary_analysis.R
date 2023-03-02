@@ -249,13 +249,16 @@ ggsave(file="figs/outcome_distribution.pdf", height = 4.25, width = 7)
 start_time <- Sys.time() 
 set.seed(999)
 # Set the number of simulated random assignments
-sims <- 1000
+sims <- 10000
 
 # Create an empty vector to store our estimates
 ri_ests_all <- rep(NA, sims)
 t1_ri_ests <- rep(NA, sims)
 t2_ri_ests <- rep(NA, sims)
 t3_ri_ests <- rep(NA, sims)
+t2_t1_ri_ests <- rep(NA, sims)
+t3_t1_ri_ests <- rep(NA, sims)
+t3_t2_ri_ests <- rep(NA, sims)
 ri_cost_info_ests <- rep(NA, sims)
 
 for (i in 1:sims) {
@@ -298,6 +301,9 @@ for (i in 1:sims) {
   t1_ri_ests[i] <- summary(ri_est_each)$coefficients[1]
   t2_ri_ests[i] <- summary(ri_est_each)$coefficients[2]
   t3_ri_ests[i] <- summary(ri_est_each)$coefficients[3]
+  t2_t1_ri_ests[i] <- summary(ri_est_each)$coefficients[2] - summary(ri_est_each)$coefficients[1]
+  t3_t1_ri_ests[i] <- summary(ri_est_each)$coefficients[3] - summary(ri_est_each)$coefficients[1]
+  t3_t2_ri_ests[i] <- summary(ri_est_each)$coefficients[3] - summary(ri_est_each)$coefficients[2]
   ri_cost_info_ests[i] <- summary(ri_est_cost)$coefficients[2] - summary(ri_est_cost)$coefficients[1]
 }
 
@@ -318,6 +324,9 @@ true_est_all <- true_est_all$coefficients[1]
 t1_true_est <- true_est_each$coefficients[1]
 t2_true_est <- true_est_each$coefficients[2]
 t3_true_est <- true_est_each$coefficients[3]
+t2_t1_true_est <- summary(true_est_each)$coefficients[2] - summary(true_est_each)$coefficients[1]
+t3_t1_true_est <- summary(true_est_each)$coefficients[3] - summary(true_est_each)$coefficients[1]
+t3_t2_true_est <- summary(true_est_each)$coefficients[3] - summary(true_est_each)$coefficients[2]
 cost_info_true_est <- summary(true_est_cost)$coefficients[2] - summary(true_est_cost)$coefficients[1]
 
 # Calculate proportion of "fake" random assignments with larger effects
@@ -325,6 +334,9 @@ p_value_all <- mean(abs(ri_ests_all) > true_est_all) # 0.0436
 t1_p_value <- mean(abs(t1_ri_ests) > t1_true_est) # 0.3861
 t2_p_value <- mean(abs(t2_ri_ests) > t2_true_est) # 0.0711
 t3_p_value <- mean(abs(t3_ri_ests) > t3_true_est) # 0.0114
+t2_t1_p_value <- mean(abs(t2_t1_ri_ests) > t2_t1_true_est)
+t3_t1_p_value <- mean(abs(t3_t1_ri_ests) > t3_t1_true_est)
+t3_t2_p_value <- mean(abs(t3_t2_ri_ests) > t3_t2_true_est)
 cost_info_p_value <- mean(abs(ri_cost_info_ests) > cost_info_true_est)
 
 end_time <- Sys.time()
@@ -335,13 +347,17 @@ end_time - start_time
 start_time <- Sys.time() # Time process: 10.5 hours with 1000 sims
 
 # Set the number of simulated random assignments
-sims <- 1000
+sims <- 10
 
 # Create an empty vector to store our estimates
 ri_ests_all <- rep(NA, sims)
 t1_ri_ests <- rep(NA, sims)
 t2_ri_ests <- rep(NA, sims)
 t3_ri_ests <- rep(NA, sims)
+t2_t1_ri_ests <- rep(NA, sims)
+t3_t1_ri_ests <- rep(NA, sims)
+t3_t2_ri_ests <- rep(NA, sims)
+ri_cost_info_ests <- rep(NA, sims)
 
 for (i in 1:sims) {
   # Conduct new random assignment accord to same procedure as original
@@ -353,9 +369,15 @@ for (i in 1:sims) {
       prob_each = c(0.1, 0.3, 0.3, 0.3)
     )
   
-  # Create hypothetical "treated" group
+  # Create hypothetical "treated" group and cost group
   comments <- comments %>% 
-    mutate(ri_treated = ifelse(ri_assignment != "Placebo", 1, 0))
+    mutate(
+      ri_treated = ifelse(ri_assignment != "Placebo", 1, 0),
+      ri_cost = case_when(
+        ri_assignment == "Placebo" ~ "Placebo",
+        ri_assignment == "Treatment 1" ~ "Information",
+        TRUE ~ "Cost"),
+      ri_cost = factor(ri_cost, c("Placebo", "Information", "Cost")))
   
   # Calculate effect sizes under simulated random assignment: all treatments
   ri_est_all <- lm_robust(comment ~ ri_treated, data = comments,
@@ -365,11 +387,19 @@ for (i in 1:sims) {
   ri_est_each <- lm_robust(comment ~ ri_assignment, data = comments,
                            clusters = address, fixed_effects = ~ city)
   
+  # Calculate effect sizes under simulated random assignment: cost treatments
+  ri_est_cost <- lm_robust(comment ~ ri_cost, data = comments,
+                           clusters = address, fixed_effects = ~ city)
+  
   # Store estimates of treatment effect from simulated random assignment
   ri_ests_all[i] <- summary(ri_est_all)$coefficients[1]
   t1_ri_ests[i] <- summary(ri_est_each)$coefficients[1]
   t2_ri_ests[i] <- summary(ri_est_each)$coefficients[2]
   t3_ri_ests[i] <- summary(ri_est_each)$coefficients[3]
+  t2_t1_ri_ests[i] <- summary(ri_est_each)$coefficients[2] - summary(ri_est_each)$coefficients[1]
+  t3_t1_ri_ests[i] <- summary(ri_est_each)$coefficients[3] - summary(ri_est_each)$coefficients[1]
+  t3_t2_ri_ests[i] <- summary(ri_est_each)$coefficients[3] - summary(ri_est_each)$coefficients[2]
+  ri_cost_info_ests[i] <- summary(ri_est_cost)$coefficients[2] - summary(ri_est_cost)$coefficients[1]
 }
 
 # Calculate true estimates from actual random assignment
@@ -379,16 +409,27 @@ true_est_all <- lm_robust(comment ~ treated, data = comments,
 true_est_each <- lm_robust(comment ~ treatment, data = comments,
                            clusters = address, fixed_effects = ~ city)
 
+true_est_cost <- lm_robust(comment ~ cost_treatment, data = comments, 
+                           clusters = address, fixed_effects = ~ city)
+
 true_est_all <- true_est_all$coefficients[1]
 t1_true_est <- true_est_each$coefficients[1]
 t2_true_est <- true_est_each$coefficients[2]
 t3_true_est <- true_est_each$coefficients[3]
+t2_t1_true_est <- summary(true_est_each)$coefficients[2] - summary(true_est_each)$coefficients[1]
+t3_t1_true_est <- summary(true_est_each)$coefficients[3] - summary(true_est_each)$coefficients[1]
+t3_t2_true_est <- summary(true_est_each)$coefficients[3] - summary(true_est_each)$coefficients[2]
+cost_info_true_est <- summary(true_est_cost)$coefficients[2] - summary(true_est_cost)$coefficients[1]
 
 # Calculate proportion of "fake" random assignments with larger effects
 p_value_all_itt <- mean(abs(ri_ests_all) > true_est_all) # 0.074
 t1_p_value_itt <- mean(abs(t1_ri_ests) > t1_true_est) # 0.38
 t2_p_value_itt <- mean(abs(t2_ri_ests) > t2_true_est) # 0.089
 t3_p_value_itt <- mean(abs(t3_ri_ests) > t3_true_est) # 0.039
+t2_t1_p_value_itt <- mean(abs(t2_t1_ri_ests) > t2_t1_true_est)
+t3_t1_p_value_itt <- mean(abs(t3_t1_ri_ests) > t3_t1_true_est)
+t3_t2_p_value_itt <- mean(abs(t3_t2_ri_ests) > t3_t2_true_est)
+cost_info_p_value_itt <- mean(abs(ri_cost_info_ests) > cost_info_true_est)
 
 end_time <- Sys.time()
 end_time - start_time
