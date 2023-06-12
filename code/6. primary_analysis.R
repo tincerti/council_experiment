@@ -334,10 +334,10 @@ p_value_all <- mean(abs(ri_ests_all) > true_est_all) # 0.0436
 t1_p_value <- mean(abs(t1_ri_ests) > t1_true_est) # 0.3861
 t2_p_value <- mean(abs(t2_ri_ests) > t2_true_est) # 0.0711
 t3_p_value <- mean(abs(t3_ri_ests) > t3_true_est) # 0.0114
-t2_t1_p_value <- mean(abs(t2_t1_ri_ests) > t2_t1_true_est)
-t3_t1_p_value <- mean(abs(t3_t1_ri_ests) > t3_t1_true_est)
-t3_t2_p_value <- mean(abs(t3_t2_ri_ests) > t3_t2_true_est)
-cost_info_p_value <- mean(abs(ri_cost_info_ests) > cost_info_true_est)
+t2_t1_p_value <- mean(abs(t2_t1_ri_ests) > t2_t1_true_est) # 0.1978
+t3_t1_p_value <- mean(abs(t3_t1_ri_ests) > t3_t1_true_est) # 0.0206
+t3_t2_p_value <- mean(abs(t3_t2_ri_ests) > t3_t2_true_est) # 0.3259
+cost_info_p_value <- mean(abs(ri_cost_info_ests) > cost_info_true_est) # 0.0342
 
 end_time <- Sys.time()
 end_time - start_time
@@ -345,9 +345,9 @@ end_time - start_time
 #### ITT ####
 # Track time taken to run randomization inference
 start_time <- Sys.time() # Time process: 10.5 hours with 1000 sims
-
+set.seed(999)
 # Set the number of simulated random assignments
-sims <- 10
+sims <- 1000
 
 # Create an empty vector to store our estimates
 ri_ests_all <- rep(NA, sims)
@@ -404,7 +404,7 @@ for (i in 1:sims) {
 
 # Calculate true estimates from actual random assignment
 true_est_all <- lm_robust(comment ~ treated, data = comments,
-                          clusters = address, fixed_effects = ~ city)
+                         clusters = address, fixed_effects = ~ city)
 
 true_est_each <- lm_robust(comment ~ treatment, data = comments,
                            clusters = address, fixed_effects = ~ city)
@@ -412,7 +412,7 @@ true_est_each <- lm_robust(comment ~ treatment, data = comments,
 true_est_cost <- lm_robust(comment ~ cost_treatment, data = comments, 
                            clusters = address, fixed_effects = ~ city)
 
-true_est_all <- true_est_all$coefficients[1]
+#true_est_all <- true_est_all$coefficients[1]
 t1_true_est <- true_est_each$coefficients[1]
 t2_true_est <- true_est_each$coefficients[2]
 t3_true_est <- true_est_each$coefficients[3]
@@ -426,10 +426,10 @@ p_value_all_itt <- mean(abs(ri_ests_all) > true_est_all) # 0.074
 t1_p_value_itt <- mean(abs(t1_ri_ests) > t1_true_est) # 0.38
 t2_p_value_itt <- mean(abs(t2_ri_ests) > t2_true_est) # 0.089
 t3_p_value_itt <- mean(abs(t3_ri_ests) > t3_true_est) # 0.039
-t2_t1_p_value_itt <- mean(abs(t2_t1_ri_ests) > t2_t1_true_est)
-t3_t1_p_value_itt <- mean(abs(t3_t1_ri_ests) > t3_t1_true_est)
-t3_t2_p_value_itt <- mean(abs(t3_t2_ri_ests) > t3_t2_true_est)
-cost_info_p_value_itt <- mean(abs(ri_cost_info_ests) > cost_info_true_est)
+t2_t1_p_value_itt <- mean(abs(t2_t1_ri_ests) > t2_t1_true_est) # 0.266
+t3_t1_p_value_itt <- mean(abs(t3_t1_ri_ests) > t3_t1_true_est) # 0.082
+t3_t2_p_value_itt <- mean(abs(t3_t2_ri_ests) > t3_t2_true_est) # 0.565
+cost_info_p_value_itt <- mean(abs(ri_cost_info_ests) > cost_info_true_est) # 0.086
 
 end_time <- Sys.time()
 end_time - start_time
