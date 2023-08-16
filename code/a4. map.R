@@ -2,9 +2,10 @@
 # DESCRIPTION ----
 # ______________________________________________________________________________
 
-# Last updated 15 October, 2021 by Trevor Incerti
+# Last updated 16 August, 2023 by Trevor Incerti
 
-# This file analyzes the results from email experiments
+# This file creates Figure A3: Map of cities in Los Angeles county by 
+# experiment status 
 
 # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
 # LIBRARIES ----
@@ -17,7 +18,7 @@ library(maps)
 library(ggmap)
 
 # City boundaries
-lac <- read_sf("/data/gis/City_Boundaries-shp/City_Boundaries.shp")
+lac <- read_sf("/data/City_Boundaries.shp")
 
 # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
 # LIBRARIES ----
