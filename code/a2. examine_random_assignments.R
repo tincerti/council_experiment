@@ -5,6 +5,7 @@
 # Last updated 16 August, 2023 by Trevor Incerti
 
 # This file examines the random assignments and provides summary statistics
+# Creates Tables A3 and A4
 
 # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
 # LIBRARIES AND IMPORT ----
