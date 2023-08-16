@@ -2,7 +2,7 @@
 # DESCRIPTION ----
 # ______________________________________________________________________________
 
-# Last updated 6 February, 2021 by Trevor Incerti
+# Last updated 16 August, 2023 by Trevor Incerti
 
 # This file examines the random assignments and provides summary statistics
 
@@ -36,13 +36,23 @@ cities <- ra_anon %>%
 # ______________________________________________________________________________
 
 #### Import covariates ####
-load("data/vf_clean.Rdata")
+vf_clean <- readRDS("data/vf_clean.rds")
 
-covs <- vf_anon %>%
+covs <- vf_clean %>%
   filter(likely_renter == 1) %>%
   select(
-    random_id, gender, english, age, yearbuilt, units, dem, rep, npp,
-    vote_2020_general, vote_2017_municipal, vote_2016_general
+    random_id, 
+    Female = gender, 
+    `Speak English` = english, 
+    Age = age, 
+    `Year building constructed` = yearbuilt, 
+    `Units in building` = units, 
+    `Democrat` = dem, 
+    `Republican` = rep, 
+    `Independent` = npp,
+    `Voted in 2020 general election` = vote_2020_general, 
+    `Voted in 2017 municipal election` = vote_2017_municipal, 
+    `Voted in 2016 general election` = vote_2016_general
   )
 
 #### Merge outcome data with covariate data ###
@@ -69,28 +79,28 @@ ra_covs_all <- ra_covs %>%
 # TABLES ----
 # ______________________________________________________________________________
 
-# Create balance table: treatment vs. placebo
+# Create Table A3: balance table treatment vs. placebo
 datasummary_balance(~treated,
                     data = ra_covs_tp,
                     fmt = 2, 
                     dinm_statistic = "p.value",
-                    output = "kableExtra") %>%
+                    output = "latex") %>%
   kable_classic(full_width = F, html_font = "Times New Roman") %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
                 font_size = 10) %>%
   kable_styling(latex_options = c("scale_down")) %>%
   row_spec(c(1,3,5,7,9,11), background = '#D3D3D3') %>%
-  save_kable("tables/ra_balance.png", zoom = 5)
+  save_kable("tables/tblA3.tex")
 
-# Create balance table: all treatments vs. placebo
+# Create Table A4: balance table all treatments vs. placebo
 datasummary_balance(~treatment,
                     data = ra_covs_all,
                     fmt = 2, 
                     dinm_statistic = "p.value",
-                    output = "kableExtra") %>%
+                    output = "latex") %>%
   kable_classic(full_width = F, html_font = "Times New Roman") %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
                 font_size = 10) %>%
   kable_styling(latex_options = c("scale_down")) %>%
   row_spec(c(1,3,5,7,9,11), background = '#D3D3D3') %>%
-  save_kable("tables/ra_balance_all.png", zoom = 5)
+  save_kable("tables/tblA4.tex")
