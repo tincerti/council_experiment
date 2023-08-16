@@ -124,3 +124,34 @@ readxl::read_excel("data//comments_tally.xlsx") %>%
   row_spec(0, color = "black", bold = T) %>%
   row_spec(1:2, color = "Steel Gray", bold = F) %>%
   row_spec(9, color = "black", bold = T)
+
+# ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+# HOUSING NET WORTH ----
+# ______________________________________________________________________________
+
+# Import data
+housing_worth <- readxl::read_excel("data/housing_net_worth.xlsx", sheet = "net_worth")
+
+# Housing net worth ------------------------------------------------------------
+housing_worth %>%
+  mutate(percentile = as.factor(percentile)) %>%
+  ggplot(aes(y = percent_change, x =percentile)) + 
+  geom_bar(position = "dodge", stat = "identity", 
+           width = 0.02, color = "steelblue2", fill = "steelblue2") +
+  geom_point(size = 2, color = "steelblue2") +
+  scale_y_continuous(labels = scales::percent) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "lightgrey") +
+  facet_wrap(~age) +
+  theme_classic() +
+  theme(
+    legend.position="none",
+    panel.grid.major.y = element_line(colour = "grey95"),
+    panel.spacing = unit(0.1, "lines"),
+    axis.text.x = element_text(size = 10),
+    axis.text.y = element_text(size = 10),
+    plot.title = element_text(size=12)
+  ) +
+  ylab("Percentage change in housing net worth (1983-2013)") +
+  xlab("Income percentile")
+
+ggsave(file="figs/figA1.pdf", height = 5, width = 5)
