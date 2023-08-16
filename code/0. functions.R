@@ -99,3 +99,19 @@ treatments <- c(
 )
 
 omit <- 'RMSE|estimate|Std.Errors|DF|R2|AIC|BIC|se_type|p.value.endogeneity|p.value.weakinst|statistic.endogeneity|statistic.endogeneity|statistic.weakinst|p.value.overid|statistic.overid'
+
+# Covariate names
+cov_map <- c(
+    '(Intercept)' = 'Constant',
+    'gender' =   'Female',
+    'english' = 'Speak English', 
+    'age' = 'Age', 
+    'yearbuilt' = 'Year building constructed', 
+    'units' = 'Units in building', 
+    'dem' = 'Democrat', 
+    'rep' = 'Republican', 
+    'npp' = 'Independent',
+    'vote_2020_general' = 'Voted in 2020 general election', 
+    'vote_2017_municipal' = 'Voted in 2017 municipal election', 
+    'vote_2016_general' = 'Voted in 2016 general election'
+)

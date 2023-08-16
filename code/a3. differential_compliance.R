@@ -2,9 +2,11 @@
 # DESCRIPTION ----
 # ______________________________________________________________________________
 
-# Last updated 2 February, 2022 by Trevor Incerti
+# Last updated 16 August, 2023 by Trevor Incerti
 
 # This file analyzes the results from email experiments
+# Creates Figures A4 and A5
+# Creates Table A5
 
 # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
 # LIBRARIES ----
@@ -57,7 +59,7 @@ compliance_rates <- comments %>%
 # Differential compliance
 opened <- lm_robust(opened ~ treatment + city, data = comments)
 
-# Coefficient plot
+# Create Figure A4: Average treatment effect on email opening, all cities
 modelplot(opened, coef_map = treatments, coef_omit = "Constant", draw = F) %>%
   ggplot(aes(x = estimate, y = term, group = term)) +
   gglayers +
@@ -65,9 +67,15 @@ modelplot(opened, coef_map = treatments, coef_omit = "Constant", draw = F) %>%
   scale_x_continuous(limits = c(-0.05, 0.05), breaks = seq(-0.05, 0.05, by = 0.02),
                      labels = scales::percent_format(accuracy = 1))
 
-ggsave(file="figs/differential_compliance.pdf", height = 2.5, width = 7)
+ggsave(file="figs/fgA4.pdf", height = 2.5, width = 7)
 
-# Are covariates similarly predictive of compliance in placebo and treatment?
+# ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+# COVARIATE PREDICTIVENESS OF COMPLIANCE BY TREATMENT ----
+# ______________________________________________________________________________
+
+# Clean covariate names for table production
+
+# Run models of covariates on open rates
 opened_covs <- list(
   "Placebo" = lm_robust(opened ~ 
                           gender + english + age + yearbuilt + units + 
@@ -91,10 +99,11 @@ opened_covs <- list(
                             data = comments, subset = treatment == "Treatment 3")
 )
 
-# Table 
-modelsummary(opened_covs, stars = T, gof_omit = omit, output = 'latex') %>%
+# Create Table A5: Covariate predictiveness of compliance by treatment group 
+modelsummary(opened_covs, coef_map = cov_map,
+             stars = T, gof_omit = omit, output = 'latex') %>%
   kable_styling(latex_options = c("striped"), stripe_color = "gray!20") %>%
-  save_kable("tables/covs_compliance.tex")
+  save_kable("tables/tblA5.tex")
 
 # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
 # DIFFERENTIAL COMPLIANCE: BY COUNCIL MEETING ----
@@ -120,7 +129,7 @@ compliance_city <- list(
                                    data = comments, subset = city == "CULVER CITY")
 )
 
-# Plot
+# Create Figure A5: Average treatment effect on email opening, by city
 modelplot(compliance_city, coef_map = treatments, 
           coef_omit = "Constant", draw = F) %>%
   filter(term != "Constant") %>%
@@ -151,5 +160,5 @@ modelplot(compliance_city, coef_map = treatments,
     legend.title=element_blank()
   )
 
-ggsave(file="figs/differential_compliance_city.pdf", height = 6, width = 8)
+ggsave(file="figs/fgA5.pdf", height = 6, width = 8)
 

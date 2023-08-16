@@ -68,6 +68,9 @@ a2. examine_random_assignment.R
 
 a3. differential_compliance.R
 - Conducts checks for differential compliance by treatment group. 
+- Create Figure A4: Average treatment effect on email opening, all cities
+- Creates Figure A5: Average treatment effect on email opening, by city
+- Create Table A5: Covariate predictiveness of compliance by treatment group 
 
 ### Data Files (relative path "~/data")
 
