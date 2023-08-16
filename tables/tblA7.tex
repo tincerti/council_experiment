@@ -1,0 +1,32 @@
+\begin{table}
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tabular}[t]{lcccc}
+\toprule
+\multicolumn{1}{c}{ } & \multicolumn{2}{c}{All treatment groups vs. placebo} & \multicolumn{2}{c}{Individual treatments vs. placebo} \\
+\cmidrule(l{3pt}r{3pt}){2-3} \cmidrule(l{3pt}r{3pt}){4-5}
+  & CACE cov & CACE nocov & CACE all cov & CACE all nocov\\
+\midrule
+\cellcolor[HTML]{D3D3D3}{Constant} & \cellcolor[HTML]{D3D3D3}{\num{0.0000}} & \cellcolor[HTML]{D3D3D3}{\num{0.0061}} & \cellcolor[HTML]{D3D3D3}{\num{0.0000}} & \cellcolor[HTML]{D3D3D3}{\num{0.0063}}\\
+ & (\num{0.0000}) & (\num{0.0086}) & (\num{0.0000}) & (\num{0.0086})\\
+ & {}[\num{0.0000}, \num{0.0000}] & {}[\num{-0.0106}, \num{0.0229}] & {}[\num{0.0000}, \num{0.0000}] & {}[\num{-0.0105}, \num{0.0231}]\\
+\cellcolor[HTML]{D3D3D3}{Treated} & \cellcolor[HTML]{D3D3D3}{\num{0.0102}***} & \cellcolor[HTML]{D3D3D3}{\num{0.0104}***} & \cellcolor[HTML]{D3D3D3}{} & \cellcolor[HTML]{D3D3D3}{}\\
+ & (\num{0.0018}) & (\num{0.0019}) &  & \\
+ & {}[\num{0.0067}, \num{0.0138}] & {}[\num{0.0066}, \num{0.0141}] &  & \\
+\cellcolor[HTML]{D3D3D3}{Instructions-only treatment} & \cellcolor[HTML]{D3D3D3}{} & \cellcolor[HTML]{D3D3D3}{} & \cellcolor[HTML]{D3D3D3}{\num{0.0054}*} & \cellcolor[HTML]{D3D3D3}{\num{0.0052}*}\\
+ &  &  & (\num{0.0025}) & (\num{0.0023})\\
+ &  &  & {}[\num{0.0006}, \num{0.0103}] & {}[\num{0.0006}, \num{0.0097}]\\
+\cellcolor[HTML]{D3D3D3}{Economic cost treatment} & \cellcolor[HTML]{D3D3D3}{} & \cellcolor[HTML]{D3D3D3}{} & \cellcolor[HTML]{D3D3D3}{\num{0.0101}**} & \cellcolor[HTML]{D3D3D3}{\num{0.0106}**}\\
+ &  &  & (\num{0.0032}) & (\num{0.0033})\\
+ &  &  & {}[\num{0.0039}, \num{0.0163}] & {}[\num{0.0041}, \num{0.0171}]\\
+\cellcolor[HTML]{D3D3D3}{Costly abstention treatment} & \cellcolor[HTML]{D3D3D3}{} & \cellcolor[HTML]{D3D3D3}{} & \cellcolor[HTML]{D3D3D3}{\num{0.0144}***} & \cellcolor[HTML]{D3D3D3}{\num{0.0148}***}\\
+ &  &  & (\num{0.0036}) & (\num{0.0037})\\
+ &  &  & {}[\num{0.0073}, \num{0.0215}] & {}[\num{0.0075}, \num{0.0222}]\\
+\midrule
+Covariate adjustment: & Yes & No & Yes & No\\
+Num.Obs. & \num{3381} & \num{3381} & \num{3381} & \num{3381}\\
+\bottomrule
+\multicolumn{5}{l}{\rule{0pt}{1em}+ p $<$ 0.1, * p $<$ 0.05, ** p $<$ 0.01, *** p $<$ 0.001}\\
+\multicolumn{5}{l}{\rule{0pt}{1em}Notes: Standard errors clustered at the address level in parentheses. 95 percent confidence intervals in brackets.}\\
+\end{tabular}}
+\end{table}

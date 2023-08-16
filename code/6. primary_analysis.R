@@ -2,7 +2,7 @@
 # DESCRIPTION ----
 # ______________________________________________________________________________
 
-# Last updated 10 January, 2021 by Trevor Incerti
+# Last updated 16 August, 2023 by Trevor Incerti
 
 # This file analyzes the results from email experiments
 
@@ -124,7 +124,7 @@ linearHypothesis(cost_any, "cost_treatmentCost - cost_treatmentInformation = 0")
 # ______________________________________________________________________________
 
 #### Coefficient plots ####
-# All treatment vs. placebo
+# Create Figure 1: All treatment vs. placebo
 modelplot(itt_cace, coef_map = treatments, 
           coef_omit = "Constant", draw = F) %>%
   filter(term != "Constant") %>%
@@ -135,8 +135,9 @@ modelplot(itt_cace, coef_map = treatments,
   gglayers +
   scale_x_continuous(limits = c(-0.5, 2.5), breaks = seq(-0.5, 2.5, by = 0.5))
 
-ggsave(file="figs/treatment_placebo.pdf", height = 1.5, width = 7)
+ggsave(file="figs/fg1.pdf", height = 1.5, width = 7)
 
+# Create Figure A6: All treatments vs. placebo without adjustment
 modelplot(itt_cace_nocovs, coef_map = treatments, 
           coef_omit = "Constant", draw = F) %>%
   filter(term != "Constant") %>%
@@ -147,9 +148,9 @@ modelplot(itt_cace_nocovs, coef_map = treatments,
   gglayers +
   scale_x_continuous(limits = c(-0.5, 2.5), breaks = seq(-0.5, 2.5, by = 0.5))
 
-ggsave(file="figs/treatment_placebo_nocovs.pdf", height = 1.5, width = 7)
+ggsave(file="figs/fgA6.pdf", height = 1.5, width = 7)
 
-# Each treatment vs. placebo
+# Create Figure 3: Each treatment vs. placebo
 modelplot(itt_cace_all, coef_map = treatments, 
           coef_omit = "Constant", draw = F) %>%
   filter(term != "Constant") %>%
@@ -160,8 +161,9 @@ modelplot(itt_cace_all, coef_map = treatments,
   gglayers +
   scale_x_continuous(limits = c(-0.5, 2.5), breaks = seq(-0.5, 2.5, by = 0.5))
 
-ggsave(file="figs/all_treatments.pdf", height = 3.5, width = 7)
+ggsave(file="figs/fg3.pdf", height = 3, width = 7)
 
+# Create Figure A7: Each treatment vs. placebo without adjustment
 modelplot(itt_cace_all_nocovs, coef_map = treatments, 
           coef_omit = "Constant", draw = F) %>%
   filter(term != "Constant") %>%
@@ -172,7 +174,7 @@ modelplot(itt_cace_all_nocovs, coef_map = treatments,
   gglayers +
   scale_x_continuous(limits = c(-0.5, 2.5), breaks = seq(-0.5, 2.5, by = 0.5))
 
-ggsave(file="figs/all_treatments_nocovs.pdf", height = 3.5, width = 7)
+ggsave(file="figs/fgA7.pdf", height = 3.5, width = 7)
 
 # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
 # CREATE TABLES ----
@@ -181,14 +183,14 @@ ggsave(file="figs/all_treatments_nocovs.pdf", height = 3.5, width = 7)
 # Combine lists into one table
 table <- c(itt_cace, itt_cace_nocovs, itt_cace_all, itt_cace_all_nocovs)
 
-names(table)[1] <- " "
-names(table)[2] <- " "
-names(table)[3] <- "  "
-names(table)[4] <- "  "
-names(table)[5] <- "   "
-names(table)[6] <- "   "
-names(table)[7] <- "    "
-names(table)[8] <- "    "
+names(table)[1] <- "ITT cov"
+names(table)[2] <- "CACE cov"
+names(table)[3] <- "ITT nocov"
+names(table)[4] <- "CACE nocov"
+names(table)[5] <- "ITT all cov"
+names(table)[6] <- "CACE all cov"
+names(table)[7] <- "ITT all nocov"
+names(table)[8] <- "CACE all nocov"
 
 itt_table <- c(table[1], table[3], table[5], table[7])
 cace_table <- c(table[2], table[4], table[6], table[8])
@@ -198,7 +200,7 @@ rows <- tribble(~term, ~treat_cov,  ~treat_nocov, ~all_cov, ~all_nocov,
                 'Covariate adjustment:', 'Yes', 'No', 'Yes', 'No')
 attr(rows, 'position') <- 16
 
-# ITT
+# Create Table A6: Intent-to-treat effects
 modelsummary(itt_table, 
              coef_map = treatments,
              statistic = c("({std.error})",
@@ -210,9 +212,9 @@ modelsummary(itt_table,
   row_spec(c(1,4,7,10,13), background = '#D3D3D3') %>%
   add_header_above(c(" " = 1, "All treatment groups vs. placebo" = 2, 
                      "Individual treatments vs. placebo" = 2)) %>%
-  save_kable("tables/itt_table.tex")
+  save_kable("tables/tblA6.tex")
 
-# CACE
+# Create Table A7: Complier average causal effects
 modelsummary(cace_table, 
              coef_map = treatments,
              statistic = c("({std.error})",
@@ -224,13 +226,14 @@ modelsummary(cace_table,
   row_spec(c(1,4,7,10,13), background = '#D3D3D3') %>%
   add_header_above(c(" " = 1, "All treatment groups vs. placebo" = 2, 
                      "Individual treatments vs. placebo" = 2)) %>%
-  save_kable("tables/cace_table.tex")
+  save_kable("tables/tblA7.tex")
 
 # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
 # ROBUSTNESS: RANDOMIZATION INFERENCE ----
 # ______________________________________________________________________________
 
 #### Histogram of distriubution of outcomes ####
+# Create Figure A9
 comments %>%
   filter(opened == 1) %>%
   mutate(comment = as.character(comment)) %>%
@@ -241,7 +244,7 @@ comments %>%
   ylab("Number of observations") +
   theme_classic() 
 
-ggsave(file="figs/outcome_distribution.pdf", height = 4.25, width = 7)
+ggsave(file="figs/fgA9.pdf", height = 4.25, width = 7)
 
 #### CACE ####
 # Track time taken to run randomization inference:
@@ -461,6 +464,4 @@ modelsummary(pl,
   kable_styling(latex_options = c("scale_down")) %>%
   add_header_above(c(" " = 1, "All treatment groups vs. placebo" = 2, 
                      "Individual treatments vs. placebo" = 2)) %>%
-  save_kable("tables/penalized_ml.tex")
-
-
+  save_kable("tables/tblA14.tex")

@@ -23,10 +23,16 @@ Note that while replication code is available for the creation of the identified
 - Conducts the random assignment to treatment conditions. Note that random assignment is conducted for all LA County cities regardless of whether or not a city received treatment as random assignment was conducted prior to announcements of council meeting agendas. 
 
 5. outcomes_clean.R 
-- Prepares the outcome data for analysis. Note that outcome data was collected via manual matching with meeting minutes and videos, so full replicability is not possible here. Minutes and videos are available upon request.
+- Prepares the outcome data for analysis. Note that outcome data was collected via manual matching with meeting minutes and videos, so full replicability is not possible here. Meeting minutes and videos are available upon request.
 
 6. primary_analysis.R
-- Calculates the intent-to-treat and complier average causal effects.
+- Calculates the intent-to-treat and complier average causal effects. This includes:
+- Figure 1: Intent-to-treat effect and complier average causal effect, all cities
+- Figure 3: Effect by treatment group, all cities
+- Figure A6: Intent-to-treat effect and complier average causal effect, all cities (without covariate adjustment)
+- Figure A7: Effect by treatment group, all cities (without covariate adjustment)
+- Results described in the main text on pp. 9-11. 
+
 
 7. heterogeneous_analysis.R
 - Calculates heterogeneous treatment effects by vote history. 
