@@ -87,13 +87,13 @@ vf_clean <- vf_clean %>%
 email <- left_join(email, vf_clean, by = c("email", "name_first", "name_last"))
 email <- email %>% distinct(email, name_first, name_last, .keep_all = T)
 
-#### Mean inpute missing covariates ####
+#### Mean impute missing covariates ####
 # Check percentage of missing covariates: less than 10% missing
 email %>%
   select(gender:vote_2016_general) %>%
   summarise_all(funs(sum(is.na(.))/nrow(email)*100))
 
-# Mean inpute missing covariates
+# Mean impute missing covariates
 email <- email %>% 
   mutate(
     across(gender:vote_2016_general, as.numeric),
@@ -147,5 +147,5 @@ comments <- email %>%
   mutate(comment = ifelse(spoken_comment == 1 | written_comment == 1, 1, 0))
 
 #### Save outcome data ####
-write_csv(comments, path = "data/outcomes/comments.csv")
+write_csv(comments, path = "data/comments.csv")
 
