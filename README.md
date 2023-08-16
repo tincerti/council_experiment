@@ -40,7 +40,7 @@ Note that while replication code is available for the creation of the identified
 
 7. heterogeneous_analysis.R
 - Calculates heterogeneous treatment effects by vote history. 
-- Creates Figure 4
+- Creates Figure 4: Complier average causal effects by turnout
 - Calculates results described in the main text on p. 12. 
 
 8. meta_analysis.R
