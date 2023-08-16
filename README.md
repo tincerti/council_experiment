@@ -26,16 +26,17 @@ Note that while replication code is available for the creation of the identified
 - Prepares the outcome data for analysis. Note that outcome data was collected via manual matching with meeting minutes and videos, so full replicability is not possible here. Meeting minutes and videos are available upon request.
 
 6. primary_analysis.R
-- Calculates the intent-to-treat and complier average causal effects. This includes:
-- Figure 1: Intent-to-treat effect and complier average causal effect, all cities
-- Figure 3: Effect by treatment group, all cities
-- Figure A6: Intent-to-treat effect and complier average causal effect, all cities (without covariate adjustment)
-- Figure A7: Effect by treatment group, all cities (without covariate adjustment)
-- Results described in the main text on pp. 9-11. 
-
+- Calculates the intent-to-treat and complier average causal effects.
+- Creates Figure 1: Intent-to-treat effect and complier average causal effect, all cities
+- Creates Figure 3: Effect by treatment group, all cities
+- Creates Figure A6: Intent-to-treat effect and complier average causal effect, all cities (without covariate adjustment)
+- Creates Figure A7: Effect by treatment group, all cities (without covariate adjustment)
+- Calculates results described in the main text on pp. 9-11. 
 
 7. heterogeneous_analysis.R
 - Calculates heterogeneous treatment effects by vote history. 
+- Creates Figure 4
+- Calculates results described in the main text on p. 12. 
 
 8. meta_analysis.R
 - Conducts meta-analysis across each individual city. 

@@ -2,7 +2,7 @@
 # DESCRIPTION ----
 # ______________________________________________________________________________
 
-# Last updated 15 October, 2021 by Trevor Incerti
+# Last updated 16 August, 2023 by Trevor Incerti
 
 # This file analyzes the results from email experiments
 
@@ -107,7 +107,7 @@ vote_cate <- list(
               subset = opened == 1 & vote_2017_municipal == 0)
 )
 
-# Create coefficient plot
+# Create Figure 4: complier average causal effect by turnout
 modelplot(vote_cate, coef_map = c('treated' = 'Treated'), 
           coef_omit = "Constant", draw = F) %>%
   filter(term != "(Intercept)") %>%
@@ -117,15 +117,17 @@ modelplot(vote_cate, coef_map = c('treated' = 'Treated'),
   gglayers +
   scale_x_continuous(limits = c(0, 5), breaks = seq(0, 5, by = 1))
 
-ggsave(file="figs/voting_cates.pdf", height = 1.5, width = 7)
+ggsave(file="figs/fg4.pdf", height = 1.5, width = 7)
 
 #### Table ####
+# Set up table settings
 vh <- list("CATE" = vh_cate)
 
 rows <- tribble(~term, ~CATE,
                 'City fixed effects:', 'Yes')
 attr(rows, 'position') <- 9
 
+# Create Table 
 modelsummary(vh, stars = TRUE,
              coef_map = c(
                '(Intercept)' = 'Constant',
@@ -137,6 +139,5 @@ modelsummary(vh, stars = TRUE,
              gof_omit = omit,
              add_rows = rows,
              output = "latex") %>%
-  #kable_styling(latex_options = c("scale_down")) %>%
   row_spec(c(1,3,5,7), background = '#D3D3D3') %>%
-  save_kable("tables/cate_table.tex")
+  save_kable("tables/tblA11.tex")
