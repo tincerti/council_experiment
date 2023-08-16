@@ -102,6 +102,6 @@ parcels_clean <- parcels_clean %>%
 apartments <- parcels_clean %>% filter(str_detect(unit_type1, "Apartment"))
 
 # Save as CSV (for use in ArcGIS)
-write_csv(apartments, path = "data/cleaned/apartments.csv")
+write_csv(apartments, path = "data/apartments.csv")
 
 
