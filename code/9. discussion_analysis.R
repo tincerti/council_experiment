@@ -154,4 +154,4 @@ housing_worth %>%
   ylab("Percentage change in housing net worth (1983-2013)") +
   xlab("Income percentile")
 
-ggsave(file="figs/figA1.pdf", height = 5, width = 5)
+ggsave(file="figs/fgA1.pdf", height = 5, width = 5)
