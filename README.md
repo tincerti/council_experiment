@@ -40,6 +40,10 @@ Note that while replication code is available for the creation of the identified
 
 8. meta_analysis.R
 - Conducts meta-analysis across each individual city. 
+- Creates Figure 2: Meta-analysis of complier average causal effects, by council meeting
+- Creates Figure A8: Meta-analysis of complier average causal effects by city, excluding pilot studies
+- Creates Table A9: CACEs for each city council meeting
+- Creates Table A10: Tabular meta analysis estimates 
 
 9. discussion_analysis.R
 - Conducts all analyses in the discussion section of the paper. I.e., estimates for spoken vs. written comments, pro vs. anti housing comments, and custom vs. pre-written comments, as well as Table 1. 

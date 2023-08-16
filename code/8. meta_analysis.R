@@ -2,7 +2,7 @@
 # DESCRIPTION ----
 # ______________________________________________________________________________
 
-# Last updated 6 January, 2022 by Trevor Incerti
+# Last updated 16 August, 2023 by Trevor Incerti
 
 # This file combines the results of individual council meetings 
 # using meta-analysis
@@ -18,6 +18,7 @@ library(modelsummary)
 library(kableExtra)
 library(metafor)
 library(gridExtra)
+library(stargazer)
 
 # Options
 options(scipen=999)
@@ -80,9 +81,9 @@ longbeach_9.14_cace <-
          subset = opened == 1 & str_detect(filename, "9.14")) %>% 
   tidy %>% mutate(model = "longbeach_9.14_cace")
 
-# Beverly Hills 10/12
+# Beverly Hills 10/12 (design matrix rank deficient for lm_lin)
 beverlyhills_10.12_cace <- 
-  lm_lin(comment ~ treated, covs, data = all, 
+  lm_robust(comment ~ treated, data = all, 
          subset = opened == 1 & str_detect(filename, "beverlyhills_10.12")) %>% 
   tidy %>% mutate(model = "beverlyhills_10.12_cace")
 
@@ -267,7 +268,7 @@ meta_cace_nopilot <- meta_cace_nopilot %>%
 # PLOT
 # ______________________________________________________________________________
 
-#### Plot: CACE #### 
+#### Create Figure 2: CACE by city and meta-analyiss #### 
 ggplot(meta_cace, aes(estimate, meeting)) +
   geom_point(color = "steelblue2", size = 1.5) + 
   geom_point(data = subset(meta_cace, 
@@ -289,10 +290,10 @@ ggplot(meta_cace, aes(estimate, meeting)) +
   theme(axis.text.x = element_text(size = 8)) +
   theme(legend.position = "none")
 
-# Save figures
-ggsave(file="figs/meta_cace.pdf", height = 4, width = 7)
+# Save figure
+ggsave(file="figs/fg2.pdf", height = 4, width = 7)
 
-#### Plot: CACE #### 
+#### Create Figure A8: Meta-analysis and CACE without pilot studies #### 
 meta_cace_nopilot %>%
   ggplot(aes(estimate, meeting)) +
   geom_point(color = "steelblue2", size = 1.5) + 
@@ -312,6 +313,105 @@ meta_cace_nopilot %>%
   theme(legend.position = "none")
 
 # Save figures
-ggsave(file="figs/meta_cace_nopilot.pdf", height = 4, width = 7)
+ggsave(file="figs/fgA8.pdf", height = 4, width = 7)
 
+# ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+# CREATE TABLES
+# ______________________________________________________________________________
 
+# Individual city CACE estimates -----------------------------------------------
+# Pull out number of observations in each city
+unique(all$filename)
+city_n <- all %>% 
+  mutate(meeting = case_when(
+    str_detect(filename, "longbeach_9.07") ~ "Long Beach 9/7",
+    str_detect(filename, "longbeach_9.14") ~ "Long Beach 9/14",
+    str_detect(filename, "santamonica_8.26") ~ "Santa Monica 8/26",
+    str_detect(filename, "beverlyhills_10.12") ~ "Beverly Hills 10/12",
+    str_detect(filename, "santamonica_10.12") ~ "Santa Monica 10/12",
+    str_detect(filename, "whittier_10.12") ~ "Whittier 10/12",
+    str_detect(filename, "ranchopalosverdes_10.19") ~ "Rancho Palos Verdes 10/19",
+    str_detect(filename, "manhattanbeach_11.02") ~ "Manhattan Beach 11/02",
+    str_detect(filename, "norwalk_11.02") ~ "Norwalk 11/02",
+    str_detect(filename, "sierramadre_11.09") ~ "Sierra Madre 11/09",
+    str_detect(filename, "culvercity_12.10") ~ "Culver City 12/10"
+  )) %>%
+  group_by(meeting, opened) %>% 
+  summarize(n = n()) %>%
+  filter(opened == 1) %>%
+  select(meeting, n)
+
+# Merge number of observations with estimates for each city
+city_cace <- left_join(meta_cace, city_n)
+
+# Format data for table export
+city_cace <- city_cace %>%
+  filter(meeting != "Fixed-effects", meeting != "Random-effects") %>%
+  mutate(`95% CI` = 
+           paste0("[", round(conf.low, 3), " , ", round(conf.high, 3), "]")
+  ) %>%
+  select(Meeting = meeting, CACE = estimate, `95% CI`, N = n)
+
+# Create Table A9: Export using stargazer
+stargazer::stargazer(city_cace,
+                     out = "tables/tblA9.tex",
+                     title= "CACEs for each city council meeting",
+                     label = "city_cace",
+                     digits = 3,
+                     column.sep.width = "30pt",
+                     rownames = FALSE, 
+                     summary = FALSE,
+                     notes = "\\parbox[t]{\\textwidth}{\\footnotesize \\textit{Note:} Standard errors in parenthesis. Figures rounded to nearest thousandth decimal place. N is equal to the number of compliers in each city.}"
+)
+
+# Meta analysis estimates ------------------------------------------------------
+# Create row labels
+Value = 
+  c("Weighted fixed effects, w/ pilot studies", 
+    "" ,
+    "Random effects, w/ pilot studies", 
+    "" ,
+    "Weighted fixed effects, w/o pilot studies", 
+    "" ,
+    "Random effects, w/o pilot studies", 
+    "" )
+
+# Populate rows with point estimates and standard errors
+Estimate = 
+  c(round(fe_cace$beta[1], 3), 
+    paste0("(", format(unlist(round(fe_cace$se, 3))),")"), 
+    round(re_cace$beta[1], 3), 
+    paste0("(", format(unlist(round(re_cace$se, 3))),")"),
+    round(fe_cace_nopilot$beta[1], 3), 
+    paste0("(", format(unlist(round(fe_cace_nopilot$se, 3))),")"), 
+    round(re_cace_nopilot$beta[1], 3), 
+    paste0("(", format(unlist(round(re_cace_nopilot$se, 3))),")"))
+
+# Create confidence intervals
+`95% CI` = 
+  c(paste0("[", round(fe_cace$ci.lb, 3), " , ", round(fe_cace$ci.ub, 3), "]"),
+    "", 
+    paste0("[", round(re_cace$ci.lb, 3), " , ", round(re_cace$ci.ub, 3), "]"),
+    "",
+    paste0("[", round(fe_cace_nopilot$ci.lb, 3), " , ", round(fe_cace_nopilot$ci.ub, 3), "]"),
+    "", 
+    paste0("[", round(re_cace_nopilot$ci.lb, 3), " , ", round(re_cace_nopilot$ci.ub, 3), "]"),
+    "")
+
+# Number of observations
+N =   c("4545", "" , "4545", "" , "3381", "" , "3381", "" )
+
+# Combine into dataframe
+meta = data.frame(Value, Estimate, `95% CI`, N, check.names = FALSE)
+
+# Create Table A10: Export using stargazer
+stargazer::stargazer(meta,
+                     out = "tables/tblA10.tex",
+                     title= "Meta-analysis estimates",
+                     label = "meta",
+                     digits = 3,
+                     column.sep.width = "30pt",
+                     rownames = FALSE, 
+                     summary = FALSE,
+                     notes = "\\parbox[t]{\\textwidth}{\\footnotesize \\textit{Note:} Standard errors in parenthesis. N is equal to the number of compliers.}"
+)
