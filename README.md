@@ -55,10 +55,18 @@ Note that while replication code is available for the creation of the identified
 
 %%%%% Results in the Online Appendix only start here %%%%%
 
-a1. examine_random_assignment.R
-- Examines the random assignments, provides summary statistics, and creates balance tables. 
+a1. descriptive_stats.R
+- Calculates descriptive statistics included in the appendix. 
+- Creates Table A1: balance table confirmed renters vs. non-confirmed renters
+- Creates Table A2: Balance tables renters with emails vs. those without
+- Creates Figure A1: Change in housing net worth by age and income percentile
 
-a2. differential_compliance.R
+a2. examine_random_assignment.R
+- Examines the random assignments, provides summary statistics, and creates balance tables. 
+- Creates Table A3: Covariate balance and difference in means test: treatment vs. placebo
+- Creates Table A4: Covariate balance across all treatment groups
+
+a3. differential_compliance.R
 - Conducts checks for differential compliance by treatment group. 
 
 ### Data Files (relative path "~/data")

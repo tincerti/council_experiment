@@ -5,7 +5,8 @@
 # Last updated 16 August, 2023 by Trevor Incerti
 
 # This code examines descriptive statistics from the voter file
-# Creates Appendix Figures A1 and A2
+# Creates Appendix Tables A1 and A2
+# Creates Figure A1
 
 # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
 # LIBRARIES AND IMPORT ----
@@ -98,4 +99,35 @@ datasummary_balance(
   row_spec(c(1,3,5,7,9,11,13), background = '#D3D3D3') %>%
   kable_styling(latex_options = c("scale_down")) %>%
   save_kable("tables/tblA2.tex")
+
+# ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+# HOUSING NET WORTH ----
+# ______________________________________________________________________________
+
+# Import data
+housing_worth <- readxl::read_excel("data/housing_net_worth.xlsx", sheet = "net_worth")
+
+# Housing net worth ------------------------------------------------------------
+housing_worth %>%
+  mutate(percentile = as.factor(percentile)) %>%
+  ggplot(aes(y = percent_change, x =percentile)) + 
+  geom_bar(position = "dodge", stat = "identity", 
+           width = 0.02, color = "steelblue2", fill = "steelblue2") +
+  geom_point(size = 2, color = "steelblue2") +
+  scale_y_continuous(labels = scales::percent) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "lightgrey") +
+  facet_wrap(~age) +
+  theme_classic() +
+  theme(
+    legend.position="none",
+    panel.grid.major.y = element_line(colour = "grey95"),
+    panel.spacing = unit(0.1, "lines"),
+    axis.text.x = element_text(size = 10),
+    axis.text.y = element_text(size = 10),
+    plot.title = element_text(size=12)
+  ) +
+  ylab("Percentage change in housing net worth (1983-2013)") +
+  xlab("Income percentile")
+
+ggsave(file="figs/fgA1.pdf", height = 5, width = 5)
 
