@@ -31,7 +31,12 @@ Note that while replication code is available for the creation of the identified
 - Creates Figure 3: Effect by treatment group, all cities
 - Creates Figure A6: Intent-to-treat effect and complier average causal effect, all cities (without covariate adjustment)
 - Creates Figure A7: Effect by treatment group, all cities (without covariate adjustment)
+- Creates Figure A9: Distribution of outcomes by treatment group (compliers only)
+- Creates Table A6: Intent-to-treat effects
+- Creates Table A7: Complier average causal effects
+- Calculates results described in Table A8: linear hypothesis tests
 - Calculates results described in the main text on pp. 9-11. 
+- Creates Table A14: ITT and CACE estimates from penalized maximum likelihood 
 
 7. heterogeneous_analysis.R
 - Calculates heterogeneous treatment effects by vote history. 
