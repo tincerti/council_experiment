@@ -2,7 +2,7 @@
 # DESCRIPTION ----
 # ______________________________________________________________________________
 
-# Last updated 31 May, 2021 by Trevor Incerti
+# Last updated 16 August, 2023 by Trevor Incerti
 
 # LA County uses Socrata API. Database and query details can be found here:
 # https://data.lacounty.gov/Parcel-/Assessor-Parcel-Data-2020/42ne-gwcj 
