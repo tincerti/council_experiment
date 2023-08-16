@@ -57,7 +57,7 @@ pro_anti_custom_cace <- list(
                        data = comments, subset = opened == 1, clusters = address)
 )
 
-##### Plot ####
+##### Create Figure 5: CACE by type of comment ####
 modelplot(pro_anti_custom_cace, coef_map = treatments, 
           coef_omit = "Constant", draw = F) %>%
   filter(term != "Constant") %>%
@@ -78,7 +78,7 @@ modelplot(pro_anti_custom_cace, coef_map = treatments,
   gglayers +
   scale_x_continuous(limits = c(-0.5, 1.5), breaks = seq(-0.5, 1.5, by = 0.5))
 
-ggsave(file="figs/pro_anti_custom.pdf", height = 4.5, width = 7)
+ggsave(file="figs/fg5.pdf", height = 4.5, width = 7)
 
 # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
 # SUBSTANTIVE CHANGE ----
@@ -99,7 +99,7 @@ color_bar <- function (color = "#49CA69", fun = "proportion", ...)
 perc_scale = function(x) (x/1)
 unit_scale = function(x) (x - min(x)) / (100 - min(x))
 
-
+#### Create Table 1: Examination of public comments in treated council meetings
 readxl::read_excel("data//comments_tally.xlsx") %>%
   select(-City, -Date, -`Treatment anti-housing comments`,
          -`Treatment pro-housing comments`,
@@ -123,5 +123,4 @@ readxl::read_excel("data//comments_tally.xlsx") %>%
   column_spec(3:5, width = "6em") %>%
   row_spec(0, color = "black", bold = T) %>%
   row_spec(1:2, color = "Steel Gray", bold = F) %>%
-  row_spec(9, color = "black", bold = T) %>%
-  save_kable("figs/comments_tally.png")
+  row_spec(9, color = "black", bold = T)
