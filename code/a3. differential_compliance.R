@@ -67,7 +67,7 @@ modelplot(opened, coef_map = treatments, coef_omit = "Constant", draw = F) %>%
   scale_x_continuous(limits = c(-0.05, 0.05), breaks = seq(-0.05, 0.05, by = 0.02),
                      labels = scales::percent_format(accuracy = 1))
 
-ggsave(file="figs/fgA4.pdf", height = 2.5, width = 7)
+#ggsave(file="figs/fgA4.pdf", height = 2.5, width = 7)
 
 # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
 # COVARIATE PREDICTIVENESS OF COMPLIANCE BY TREATMENT ----
@@ -102,8 +102,8 @@ opened_covs <- list(
 # Create Table A5: Covariate predictiveness of compliance by treatment group 
 modelsummary(opened_covs, coef_map = cov_map,
              stars = T, gof_omit = omit, output = 'latex') %>%
-  kable_styling(latex_options = c("striped"), stripe_color = "gray!20") %>%
-  save_kable("tables/tblA5.tex")
+  kable_styling(latex_options = c("striped"), stripe_color = "gray!20") #%>%
+  #save_kable("tables/tblA5.tex")
 
 # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
 # DIFFERENTIAL COMPLIANCE: BY COUNCIL MEETING ----
@@ -160,5 +160,5 @@ modelplot(compliance_city, coef_map = treatments,
     legend.title=element_blank()
   )
 
-ggsave(file="figs/fgA5.pdf", height = 6, width = 8)
+#ggsave(file="figs/fgA5.pdf", height = 6, width = 8)
 

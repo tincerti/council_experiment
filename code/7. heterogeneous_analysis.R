@@ -117,7 +117,7 @@ modelplot(vote_cate, coef_map = c('treated' = 'Treated'),
   gglayers +
   scale_x_continuous(limits = c(0, 5), breaks = seq(0, 5, by = 1))
 
-ggsave(file="figs/fg4.pdf", height = 1.5, width = 7)
+#ggsave(file="figs/fg4.pdf", height = 1.5, width = 7)
 
 #### Table ####
 # Set up table settings
@@ -139,5 +139,5 @@ modelsummary(vh, stars = TRUE,
              gof_omit = omit,
              add_rows = rows,
              output = "latex") %>%
-  row_spec(c(1,3,5,7), background = '#D3D3D3') %>%
-  save_kable("tables/tblA11.tex")
+  row_spec(c(1,3,5,7), background = '#D3D3D3') #%>%
+  #save_kable("tables/tblA11.tex")

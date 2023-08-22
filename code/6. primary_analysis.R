@@ -135,7 +135,7 @@ modelplot(itt_cace, coef_map = treatments,
   gglayers +
   scale_x_continuous(limits = c(-0.5, 2.5), breaks = seq(-0.5, 2.5, by = 0.5))
 
-ggsave(file="figs/fg1.pdf", height = 1.5, width = 7)
+#ggsave(file="figs/fg1.pdf", height = 1.5, width = 7)
 
 # Create Figure A6: All treatments vs. placebo without adjustment
 modelplot(itt_cace_nocovs, coef_map = treatments, 
@@ -148,7 +148,7 @@ modelplot(itt_cace_nocovs, coef_map = treatments,
   gglayers +
   scale_x_continuous(limits = c(-0.5, 2.5), breaks = seq(-0.5, 2.5, by = 0.5))
 
-ggsave(file="figs/fgA6.pdf", height = 1.5, width = 7)
+#ggsave(file="figs/fgA6.pdf", height = 1.5, width = 7)
 
 # Create Figure 3: Each treatment vs. placebo
 modelplot(itt_cace_all, coef_map = treatments, 
@@ -161,7 +161,7 @@ modelplot(itt_cace_all, coef_map = treatments,
   gglayers +
   scale_x_continuous(limits = c(-0.5, 2.5), breaks = seq(-0.5, 2.5, by = 0.5))
 
-ggsave(file="figs/fg3.pdf", height = 3, width = 7)
+#ggsave(file="figs/fg3.pdf", height = 3, width = 7)
 
 # Create Figure A7: Each treatment vs. placebo without adjustment
 modelplot(itt_cace_all_nocovs, coef_map = treatments, 
@@ -174,7 +174,7 @@ modelplot(itt_cace_all_nocovs, coef_map = treatments,
   gglayers +
   scale_x_continuous(limits = c(-0.5, 2.5), breaks = seq(-0.5, 2.5, by = 0.5))
 
-ggsave(file="figs/fgA7.pdf", height = 3.5, width = 7)
+#ggsave(file="figs/fgA7.pdf", height = 3.5, width = 7)
 
 # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
 # CREATE TABLES ----
@@ -211,8 +211,8 @@ modelsummary(itt_table,
   kable_styling(latex_options = c("scale_down")) %>%
   row_spec(c(1,4,7,10,13), background = '#D3D3D3') %>%
   add_header_above(c(" " = 1, "All treatment groups vs. placebo" = 2, 
-                     "Individual treatments vs. placebo" = 2)) %>%
-  save_kable("tables/tblA6.tex")
+                     "Individual treatments vs. placebo" = 2)) #%>%
+  #save_kable("tables/tblA6.tex")
 
 # Create Table A7: Complier average causal effects
 modelsummary(cace_table, 
@@ -225,8 +225,8 @@ modelsummary(cace_table,
   kable_styling(latex_options = c("scale_down")) %>%
   row_spec(c(1,4,7,10,13), background = '#D3D3D3') %>%
   add_header_above(c(" " = 1, "All treatment groups vs. placebo" = 2, 
-                     "Individual treatments vs. placebo" = 2)) %>%
-  save_kable("tables/tblA7.tex")
+                     "Individual treatments vs. placebo" = 2)) #%>%
+  #save_kable("tables/tblA7.tex")
 
 # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
 # ROBUSTNESS: RANDOMIZATION INFERENCE ----
@@ -244,7 +244,7 @@ comments %>%
   ylab("Number of observations") +
   theme_classic() 
 
-ggsave(file="figs/fgA9.pdf", height = 4.25, width = 7)
+#ggsave(file="figs/fgA9.pdf", height = 4.25, width = 7)
 
 #### CACE ####
 # Track time taken to run randomization inference:
@@ -463,5 +463,5 @@ modelsummary(pl,
     row_spec(c(1,4,7,10,13), background = '#D3D3D3') %>%
   kable_styling(latex_options = c("scale_down")) %>%
   add_header_above(c(" " = 1, "All treatment groups vs. placebo" = 2, 
-                     "Individual treatments vs. placebo" = 2)) %>%
-  save_kable("tables/tblA14.tex")
+                     "Individual treatments vs. placebo" = 2)) #%>%
+  #save_kable("tables/tblA14.tex")

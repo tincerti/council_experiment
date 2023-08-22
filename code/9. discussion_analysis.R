@@ -79,7 +79,7 @@ modelplot(pro_anti_custom_cace, coef_map = treatments,
   gglayers +
   scale_x_continuous(limits = c(-0.5, 1.5), breaks = seq(-0.5, 1.5, by = 0.5))
 
-ggsave(file="figs/fg5.pdf", height = 3, width = 7)
+#ggsave(file="figs/fg5.pdf", height = 3, width = 7)
 
 ##### Create Table A12: Complier average causal effects by outcome ####
 modelsummary(pro_anti_custom_cace, stars = TRUE,
@@ -91,8 +91,8 @@ modelsummary(pro_anti_custom_cace, stars = TRUE,
              gof_omit = omit,
              output = "latex") %>%
   kable_styling(latex_options = c("scale_down")) %>%
-  row_spec(c(1,3,5,7), background = '#D3D3D3') %>%
-  save_kable("tables/tblA12.tex")
+  row_spec(c(1,3,5,7), background = '#D3D3D3') #%>%
+  #save_kable("tables/tblA12.tex")
 
 # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
 # SUBSTANTIVE CHANGE ----

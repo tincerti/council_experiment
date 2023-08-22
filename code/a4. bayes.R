@@ -61,7 +61,7 @@ bayes_ols_fx = brm(
   seed = 444
 )
 
-#### Calculate posterior probability under the hypothesis against alternative ####
+#### Calculate posterior probability (evidence ratio) under the hypothesis against alternative ####
 hypothesis(bayes_ols_fx, "treatmentTreatment 3 - treatmentTreatment 1 > 0")
 hypothesis(bayes_ols_fx, "treatmentTreatment 3 - treatmentTreatment 2 > 0")
 
@@ -75,7 +75,7 @@ mcmc_plot(bayes_ols_fx,
   scale_y_discrete(labels = c("Intercept", "Instructions-only",
                              "Economic cost", "Costly abstension"))
 
-ggsave(file="figs/fgA10.pdf", height = 3, width = 7)
+#ggsave(file="figs/fgA10.pdf", height = 3, width = 7)
 
 # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
 # DIFFERENCES IN COEFFICIENTS PLOTS ----
@@ -167,4 +167,4 @@ bayes_t3_t2 <- ggplot(mpost_long_df) +
 
 # Create Figure A11: Combine above into two figures and save
 bayes_hypotheses <- grid.arrange(bayes_t3_t1, bayes_t3_t2, nrow = 1)
-ggsave(bayes_hypotheses, file="figs/fgA11.pdf", height = 5, width = 7)
+#ggsave(bayes_hypotheses, file="figs/fgA11.pdf", height = 5, width = 7)

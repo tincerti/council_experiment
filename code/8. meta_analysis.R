@@ -291,7 +291,7 @@ ggplot(meta_cace, aes(estimate, meeting)) +
   theme(legend.position = "none")
 
 # Save figure
-ggsave(file="figs/fg2.pdf", height = 4, width = 7)
+#ggsave(file="figs/fg2.pdf", height = 4, width = 7)
 
 #### Create Figure A8: Meta-analysis and CACE without pilot studies #### 
 meta_cace_nopilot %>%
@@ -313,7 +313,7 @@ meta_cace_nopilot %>%
   theme(legend.position = "none")
 
 # Save figures
-ggsave(file="figs/fgA8.pdf", height = 4, width = 7)
+#ggsave(file="figs/fgA8.pdf", height = 4, width = 7)
 
 # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
 # CREATE TABLES
@@ -354,7 +354,7 @@ city_cace <- city_cace %>%
 
 # Create Table A9: Export using stargazer
 stargazer::stargazer(city_cace,
-                     out = "tables/tblA9.tex",
+                     #out = "tables/tblA9.tex",
                      title= "CACEs for each city council meeting",
                      label = "city_cace",
                      digits = 3,
@@ -406,7 +406,7 @@ meta = data.frame(Value, Estimate, `95% CI`, N, check.names = FALSE)
 
 # Create Table A10: Export using stargazer
 stargazer::stargazer(meta,
-                     out = "tables/tblA10.tex",
+                     #out = "tables/tblA10.tex",
                      title= "Meta-analysis estimates",
                      label = "meta",
                      digits = 3,

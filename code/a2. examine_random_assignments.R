@@ -90,8 +90,8 @@ datasummary_balance(~treated,
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
                 font_size = 10) %>%
   kable_styling(latex_options = c("scale_down")) %>%
-  row_spec(c(1,3,5,7,9,11), background = '#D3D3D3') %>%
-  save_kable("tables/tblA3.tex")
+  row_spec(c(1,3,5,7,9,11), background = '#D3D3D3') #%>%
+  #save_kable("tables/tblA3.tex")
 
 # Create Table A4: balance table all treatments vs. placebo
 datasummary_balance(~treatment,
@@ -103,5 +103,5 @@ datasummary_balance(~treatment,
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
                 font_size = 10) %>%
   kable_styling(latex_options = c("scale_down")) %>%
-  row_spec(c(1,3,5,7,9,11), background = '#D3D3D3') %>%
-  save_kable("tables/tblA4.tex")
+  row_spec(c(1,3,5,7,9,11), background = '#D3D3D3') #%>%
+  #save_kable("tables/tblA4.tex")

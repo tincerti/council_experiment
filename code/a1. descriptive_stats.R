@@ -82,8 +82,8 @@ datasummary_balance(
   dinm_statistic = "p.value",
   output = "latex") %>% 
   row_spec(c(1,3,5,7,9,11, 13), background = '#D3D3D3') %>%
-  kable_styling(latex_options = c("scale_down")) %>%
-  save_kable("tables/tblA1.tex")
+  kable_styling(latex_options = c("scale_down")) #%>%
+  #save_kable("tables/tblA1.tex")
 
 #### Create Table A2: Balance table email in voter file ####
 lr <- lr %>%
@@ -97,8 +97,8 @@ datasummary_balance(
   dinm_statistic = "p.value",
   output = "latex") %>% 
   row_spec(c(1,3,5,7,9,11,13), background = '#D3D3D3') %>%
-  kable_styling(latex_options = c("scale_down")) %>%
-  save_kable("tables/tblA2.tex")
+  kable_styling(latex_options = c("scale_down")) #%>%
+  #save_kable("tables/tblA2.tex")
 
 # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
 # HOUSING NET WORTH ----
@@ -129,5 +129,5 @@ housing_worth %>%
   ylab("Percentage change in housing net worth (1983-2013)") +
   xlab("Income percentile")
 
-ggsave(file="figs/fgA1.pdf", height = 5, width = 5)
+#ggsave(file="figs/fgA1.pdf", height = 5, width = 5)
 
