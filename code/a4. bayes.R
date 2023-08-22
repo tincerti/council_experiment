@@ -2,7 +2,7 @@
 # DESCRIPTION ----
 # ______________________________________________________________________________
 
-# Last updated 17 August, 2023 by Trevor Incerti
+# Last updated 22 August, 2023 by Trevor Incerti
 
 # This file implements the Bayesian analysis referenced in the main text.
 # Creates Figures A10 and A11. 
@@ -13,15 +13,10 @@
 
 # Load libraries
 library(tidyverse)
-#library(DeclareDesign)
 library(bayestestR)
 library(car)
 library(brms)
 library(gridExtra)
-
-# Options
-options(scipen=999)
-set.seed(999)
 
 # Functions
 source("code/0. functions.R")
@@ -45,7 +40,7 @@ priors <-
   c(prior(normal(0.004, 0.1), class = b, coef = treatmentTreatment1),
     prior(normal(0.0077, 0.1), class = b, coef = treatmentTreatment2),
     prior(normal(0.01, 0.1), class = b, coef = treatmentTreatment3),
-    prior(normal(0.001, 0.05), class = Intercept))
+    prior(normal(0.001, 0.01), class = Intercept))
 
 # Check priors made it into Stan code
 make_stancode(comment ~ treatment, data = compliers, family = gaussian(),
@@ -63,7 +58,7 @@ bayes_ols_fx = brm(
   sample_prior = "yes",
   family = gaussian,
   cores = 4,
-  seed = 999
+  seed = 444
 )
 
 #### Calculate posterior probability under the hypothesis against alternative ####

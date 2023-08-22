@@ -79,7 +79,20 @@ modelplot(pro_anti_custom_cace, coef_map = treatments,
   gglayers +
   scale_x_continuous(limits = c(-0.5, 1.5), breaks = seq(-0.5, 1.5, by = 0.5))
 
-ggsave(file="figs/fg5.pdf", height = 4.5, width = 7)
+ggsave(file="figs/fg5.pdf", height = 3, width = 7)
+
+##### Create Table A12: Complier average causal effects by outcome ####
+modelsummary(pro_anti_custom_cace, stars = TRUE,
+             coef_map = c(
+               '(Intercept)' = 'Constant',
+               'treatedTreatment' = 'Treated'
+             ),
+             notes = c("Notes: CATE standard errors clustered at the address level."),
+             gof_omit = omit,
+             output = "latex") %>%
+  kable_styling(latex_options = c("scale_down")) %>%
+  row_spec(c(1,3,5,7), background = '#D3D3D3') %>%
+  save_kable("tables/tblA12.tex")
 
 # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
 # SUBSTANTIVE CHANGE ----
@@ -125,3 +138,4 @@ readxl::read_excel("data//comments_tally.xlsx") %>%
   row_spec(0, color = "black", bold = T) %>%
   row_spec(1:2, color = "Steel Gray", bold = F) %>%
   row_spec(9, color = "black", bold = T)
+

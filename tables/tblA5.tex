@@ -1,5 +1,7 @@
-\begin{table}
+\begin{table}[H]
 \centering
+\fontsize{10}{12}\selectfont
+\resizebox{\linewidth}{!}{
 \begin{tabular}[t]{lcccc}
 \toprule
   & Placebo & Treatment 1 & Treatment 2 & Treatment 3\\
@@ -32,5 +34,7 @@
 \cellcolor{gray!20}{Num.Obs.} & \cellcolor{gray!20}{\num{2007}} & \cellcolor{gray!20}{\num{5984}} & \cellcolor{gray!20}{\num{6002}} & \cellcolor{gray!20}{\num{5958}}\\
 \bottomrule
 \multicolumn{5}{l}{\rule{0pt}{1em}+ p $<$ 0.1, * p $<$ 0.05, ** p $<$ 0.01, *** p $<$ 0.001}\\
-\end{tabular}
+\end{tabular}}
+\caption{Covariate predictiveness of compliance by treatment group}
+\label{tab: covs_compliance}
 \end{table}
