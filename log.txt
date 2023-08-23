@@ -1,0 +1,1488 @@
+
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # DESCRIPTION ----
+> # ______________________________________________________________________________
+> 
+> # Last updated 16 August, 2023 by Trevor Incerti
+> 
+> # This file combines the results of individual council meetings 
+> # using meta-analysis
+> 
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # LIBRARIES ----
+> # ______________________________________________________________________________
+> 
+> # Load libraries
+> library(tidyverse)
+
+> library(DeclareDesign)
+
+> library(modelsummary)
+
+> library(kableExtra)
+
+> library(metafor)
+
+> library(gridExtra)
+
+> library(stargazer)
+
+> # Options
+> options(scipen=999)
+
+> # Functions
+> source("code/0. functions.R")
+
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # IMPORT AND MERGE DATA ----
+> # ______________________________________________________________________________
+> 
+> # Import data
+> pilot <- read_csv("data/pilot_outcomes.csv")
+[1mindexed[0m [32m0B[0m in [36m 0s[0m, [32m0B/s[0m[1mindexed[0m [32m1.00TB[0m in [36m 0s[0m, [32m254.32TB/s[0m                                                                                                                                  
+> comments <- read_csv("data/comments.csv")
+[1mindexing[0m [34mcomments.csv[0m [=======================================================================================] [32m653.52GB/s[0m, eta: [36m 0s[0m                                                                                                                                                                       
+> # Create indicator for pilot studies and merge 
+> pilot <- pilot %>% 
++   mutate(
++     pilot = 1,
++     city = if_else(str_detect(filename, "longbeach"), 
++                    "LONG BEACH", "SANTA MONICA"),
++     comment = ifelse(spoken_comment == 1 | written_comment == 1, 1, 0),
++     treated = if_else(treatment == "placebo", "Placebo", "Treatment")
++   )
+
+> all <- bind_rows(pilot, comments)
+
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # ANALYSES ----
+> # ______________________________________________________________________________
+> 
+> ##### Create list of covariates for covariate adjustment in estimation ####
+> covs = ~ gender + english + age + 
++   yearbuilt + units + dem + rep + npp +
++   vote_2020_general + vote_2017_municipal + vote_2016_general
+
+> # Add treated indicator
+> all <- all %>% 
++   mutate(received_treatment = ifelse(opened == 1 & treated == "Treatment", 1, 0))
+
+> #### Complier Average Causal Effect / Local Average Treatment Effect ####
+> # Santa Monica 8.26
+> n <- 91
+
+> p <- (1/(n+2))
+
+> se = sqrt(p*(1-p)/n)
+
+> santamonica_08.26_cace <- 
++   tibble(term = "Treatment", estimate = 0, 
++          std.error = se, conf.low = 0-(1.96*se), conf.high = 0+(1.96*se),
++          model = "santamonica_08.26_cace")
+
+> # Long beach 9/07
+> longbeach_9.07_cace <- 
++   lm_lin(comment ~ treated, covs, data = all, 
++          subset = opened == 1 & str_detect(filename, "9.07")) %>%
++   tidy %>% mutate(model = "longbeach_9.07_cace")
+
+> # Long Beach 9/14
+> longbeach_9.14_cace <- 
++   lm_lin(comment ~ treated, covs, data = all, 
++          subset = opened == 1 & str_detect(filename, "9.14")) %>% 
++   tidy %>% mutate(model = "longbeach_9.14_cace")
+
+> # Beverly Hills 10/12 (design matrix rank deficient for lm_lin)
+> beverlyhills_10.12_cace <- 
++   lm_robust(comment ~ treated, data = all, 
++          subset = opened == 1 & str_detect(filename, "beverlyhills_10.12")) %>% 
++   tidy %>% mutate(model = "beverlyhills_10.12_cace")
+
+> # Santa Monica 10/12
+> santamonica_10.12_cace <- 
++   lm_lin(comment ~ treated, 
++          ~ gender + age + 
++            yearbuilt + units + dem + rep + npp +
++            vote_2020_general + vote_2017_municipal + vote_2016_general
++          , data = all, 
++          subset = opened == 1 & str_detect(filename, "santamonica_10.12")) %>% 
++   tidy %>% mutate(model = "santamonica_10.12_cace")
+
+> # Whittier 10/12 (design matrix rank deficient for lm_lin)
+> whittier_10.12_cace <- 
++   lm_robust(comment ~ treated, data = all, 
++          subset = opened == 1 & str_detect(filename, "whittier_10.12")) %>% 
++   tidy %>% mutate(model = "whittier_10.12_cace")
+
+> # Rancho Palos Verdes 10/19 (design matrix rank deficient for lm_lin)
+> ranchopalosverdes_10.19_cace <- 
++   lm_robust(comment ~ treated, data = all, 
++             subset = opened == 1 & str_detect(filename, "ranchopalosverdes_10.19")) %>% 
++   tidy %>% mutate(model = "ranchopalosverdes_10.19_cace")
+
+> # Manhattan Beach 11/02
+> comments %>% group_by(city, opened) %>% summarize(n = n())
+# A tibble: 16 × 3
+# Groups:   city [8]
+   city                opened     n
+   <chr>                <dbl> <int>
+ 1 BEVERLY HILLS            0  1134
+ 2 BEVERLY HILLS            1   194
+ 3 CULVER CITY              0  1235
+ 4 CULVER CITY              1   318
+ 5 MANHATTAN BEACH          0   212
+ 6 MANHATTAN BEACH          1    70
+ 7 NORWALK                  0  1214
+ 8 NORWALK                  1   213
+ 9 RANCHO PALOS VERDES      0   316
+10 RANCHO PALOS VERDES      1    57
+11 SANTA MONICA             0  9085
+12 SANTA MONICA             1  2102
+13 SIERRA MADRE             0   151
+14 SIERRA MADRE             1    31
+15 WHITTIER                 0  3223
+16 WHITTIER                 1   396
+
+> n <- 70
+
+> p <- (1/(n+2))
+
+> se = sqrt(p*(1-p)/n)
+
+> manhattanbeach_11.02_cace <- 
++   tibble(term = "treatedTreatment", estimate = 0, 
++          std.error = se, conf.low = 0-(1.96*se), conf.high = 0+(1.96*se),
++          model = "manhattanbeach_11.02_cace")
+
+> # Norwalk 11/02 (design matrix rank deficient for lm_lin)
+> norwalk_11.02_cace <- 
++   lm_robust(comment ~ treated, data = all, 
++             subset = opened == 1 & str_detect(filename, "norwalk_11.02")) %>% 
++   tidy %>% mutate(model = "norwalk_11.02_cace")
+
+> # Sierra Madre 11/09
+> comments %>% group_by(city, opened) %>% summarize(n = n())
+# A tibble: 16 × 3
+# Groups:   city [8]
+   city                opened     n
+   <chr>                <dbl> <int>
+ 1 BEVERLY HILLS            0  1134
+ 2 BEVERLY HILLS            1   194
+ 3 CULVER CITY              0  1235
+ 4 CULVER CITY              1   318
+ 5 MANHATTAN BEACH          0   212
+ 6 MANHATTAN BEACH          1    70
+ 7 NORWALK                  0  1214
+ 8 NORWALK                  1   213
+ 9 RANCHO PALOS VERDES      0   316
+10 RANCHO PALOS VERDES      1    57
+11 SANTA MONICA             0  9085
+12 SANTA MONICA             1  2102
+13 SIERRA MADRE             0   151
+14 SIERRA MADRE             1    31
+15 WHITTIER                 0  3223
+16 WHITTIER                 1   396
+
+> n <- 31
+
+> p <- (1/(n+2))
+
+> se = sqrt(p*(1-p)/n)
+
+> sierramadre_11.09_cace <- 
++   tibble(term = "treatedTreatment", estimate = 0, 
++          std.error = se, conf.low = 0-(1.96*se), conf.high = 0+(1.96*se),
++          model = "sierramadre_11.09_cace")
+
+> # Culver city 12/10
+> culvercity_12.10_cace <- 
++   lm_robust(comment ~ treated, data = all, 
++             subset = opened == 1 & str_detect(filename, "culvercity_12.10")) %>% 
++   tidy %>% mutate(model = "culvercity_12.10_cace")
+
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # ADD INDIVIDUALS STUDIES TO SINGLE DATAFRAME
+> # ______________________________________________________________________________
+> 
+> # Create dataframe
+> meta_cace <- 
++   bind_rows(longbeach_9.07_cace, longbeach_9.14_cace,
++             beverlyhills_10.12_cace, santamonica_10.12_cace, 
++             whittier_10.12_cace, ranchopalosverdes_10.19_cace,
++             manhattanbeach_11.02_cace, norwalk_11.02_cace,
++             sierramadre_11.09_cace, culvercity_12.10_cace) %>%
++   filter(term == "treatedTreatment") %>% 
++   mutate(term = "Treatment", estimand = "CACE") %>%
++   bind_rows(santamonica_08.26_cace)
+
+> # Clean meeting names
+> meta_cace <- meta_cace %>% 
++   mutate(meeting = case_when(
++   str_detect(model, "longbeach_9.07") ~ "Long Beach 9/7",
++   str_detect(model, "longbeach_9.14") ~ "Long Beach 9/14",
++   str_detect(model, "santamonica_08.26") ~ "Santa Monica 8/26",
++   str_detect(model, "beverlyhills_10.12") ~ "Beverly Hills 10/12",
++   str_detect(model, "santamonica_10.12") ~ "Santa Monica 10/12",
++   str_detect(model, "whittier_10.12") ~ "Whittier 10/12",
++   str_detect(model, "ranchopalosverdes_10.19") ~ "Rancho Palos Verdes 10/19",
++   str_detect(model, "manhattanbeach_11.02_cace") ~ "Manhattan Beach 11/02",
++   str_detect(model, "norwalk_11.02_cace") ~ "Norwalk 11/02",
++   str_detect(model, "sierramadre_11.09_cace") ~ "Sierra Madre 11/09",
++   str_detect(model, "culvercity_12.10_cace") ~ "Culver City 12/10"
++   )
++   )
+
+> # Remove pilot studies for robustness analysis
+> meta_cace_nopilot <- meta_cace %>%
++   filter(!meeting %in% 
++            c("Long Beach 9/14", "Long Beach 9/7", "Santa Monica 8/26"))
+
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # PERFORM META-ANALYSIS
+> # ______________________________________________________________________________
+> 
+> # Random effects model
+> re_cace = rma.uni(yi = estimate, sei = std.error, data = meta_cace)
+
+> # Fixed effects model
+> fe_cace = rma.uni(yi = estimate, sei = std.error, weighted = TRUE,
++                     method = "FE", data = meta_cace)
+
+> # Random effects model - no pilot
+> re_cace_nopilot = rma.uni(yi = estimate, sei = std.error, 
++                           data = meta_cace_nopilot)
+
+> # Fixed effects model - no pilot
+> fe_cace_nopilot = rma.uni(yi = estimate, sei = std.error, weighted = TRUE,
++                   method = "FE", data = meta_cace_nopilot)
+
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # PREPARE FOR PLOTTING
+> # ______________________________________________________________________________
+> 
+> #### Create plot object: CACE #### 
+> meta_fe_cace = tibble(
++   estimate = fe_cace$beta, conf.high = fe_cace$ci.ub, conf.low = fe_cace$ci.lb,
++   meeting = "Fixed-effects")
+
+> meta_re_cace = tibble(
++   estimate = re_cace$beta, conf.high = re_cace$ci.ub, conf.low = re_cace$ci.lb,
++   meeting = "Random-effects")
+
+> meta_cace <- meta_cace %>% 
++   select(estimate, conf.low, conf.high, meeting)
+
+> meta_cace <- rbind(meta_cace, meta_fe_cace, meta_re_cace)
+
+> # Mutliply effect size by 100
+> meta_cace <- meta_cace %>% mutate(across(estimate:conf.high, ~ . * 100))
+
+> # Re-order factor levels
+> meta_cace <- meta_cace %>% 
++   mutate(
++     meeting = 
++       fct_relevel(meeting, 
++                   "Random-effects", "Fixed-effects",
++                   "Culver City 12/10", "Sierra Madre 11/09", 
++                   "Norwalk 11/02", "Manhattan Beach 11/02", 
++                   "Rancho Palos Verdes 10/19",
++                   "Whittier 10/12", "Santa Monica 10/12", "Beverly Hills 10/12",
++                   "Long Beach 9/14", "Long Beach 9/7", "Santa Monica 8/26" # Pilots
++                   ))
+
+> #### Create plot object: CACE without pilot studies #### 
+> meta_fe_cace_nopilot = tibble(
++   estimate = fe_cace_nopilot$beta, 
++   conf.high = fe_cace_nopilot$ci.ub, conf.low = fe_cace_nopilot$ci.lb,
++   meeting = "Fixed-effects")
+
+> meta_re_cace_nopilot = tibble(
++   estimate = re_cace_nopilot$beta, 
++   conf.high = re_cace_nopilot$ci.ub, conf.low = re_cace_nopilot$ci.lb,
++   meeting = "Random-effects")
+
+> meta_cace_nopilot <- meta_cace_nopilot %>% 
++   select(estimate, conf.low, conf.high, meeting)
+
+> meta_cace_nopilot <- rbind(meta_cace_nopilot, 
++                            meta_fe_cace_nopilot, meta_re_cace_nopilot)
+
+> # Mutliply effect size by 100
+> meta_cace_nopilot <- meta_cace_nopilot %>% 
++   mutate(across(estimate:conf.high, ~ . * 100))
+
+> # Re-order factor levels
+> meta_cace_nopilot <- meta_cace_nopilot %>% 
++   mutate(
++     meeting = 
++       fct_relevel(meeting, 
++                   "Random-effects", "Fixed-effects",
++                   "Culver City 12/10", "Sierra Madre 11/09", 
++                   "Norwalk 11/02", "Manhattan Beach 11/02", 
++                   "Rancho Palos Verdes 10/19",
++                   "Whittier 10/12", "Santa Monica 10/12", "Beverly Hills 10/12"
++                   ))
+
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # PLOT
+> # ______________________________________________________________________________
+> 
+> #### Create Figure 2: CACE by city and meta-analyiss #### 
+> ggplot(meta_cace, aes(estimate, meeting)) +
++   geom_point(color = "steelblue2", size = 1.5) + 
++   geom_point(data = subset(meta_cace, 
++                            meeting == "Long Beach 9/7" | meeting  == "Long Beach 9/14" |
++                            meeting == "Santa Monica 8/26"), 
++              size = 1.5, color = "seagreen3") +
++   geom_point(data = subset(meta_cace, 
++                            meeting == "Fixed-effects" | meeting  == "Random-effects"), 
++              size = 1.5, color = "black", fill = "black") +
++   geom_errorbarh(aes(y = meeting, xmin = conf.low, xmax = conf.high),
++                  color="grey30", size=0.5, alpha = 0.5, height = 0.2) +
++   geom_vline(xintercept = 0, linetype = "dashed") +
++   geom_hline(yintercept .... [TRUNCATED] 
+
+> # Save figure
+> #ggsave(file="figs/fg2.pdf", height = 4, width = 7)
+> 
+> #### Create Figure A8: Meta-analysis and CACE without pilot studies #### 
+> meta_cace_nopilot %>%
++   ggplot(aes(estimate, meeting)) +
++   geom_point(color = "steelblue2", size = 1.5) + 
++   geom_point(data = subset(meta_cace_nopilot, 
++                            meeting == "Fixed-effects" | meeting  == "Random-effects"), 
++              size = 1.5, color = "black", fill = "black") +
++   geom_errorbarh(aes(y = meeting, xmin = conf.low, xmax = conf.high),
++                  color="grey30", size=0.5, alpha = 0.5, height = 0.2) +
++   geom_vline(xintercept = 0, linetype = "dashed") +
++   geom_hline(yintercept = 2.5, linetype = "solid") +
++   xlab("Change in comments submitted (percentage points)") + 
++   scale_x_continuous(limits = c(-10, 10), breaks = seq(-10, 10, by = 1)) +
++   theme_classic() +
++   theme(axis.title.y=element_blank()) +
++   theme(axis.text=element_text(size = 8)) +
++   theme(axis.text.x = element .... [TRUNCATED] 
+
+> # Save figures
+> #ggsave(file="figs/fgA8.pdf", height = 4, width = 7)
+> 
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # CREATE TABLES
+> # ______________________________________________________________________________
+> 
+> # Individual city CACE estimates -----------------------------------------------
+> # Pull out number of observations in each city
+> unique(all$filename)
+ [1] "longbeach_9.07_placebo"          "longbeach_9.07_t1"               "longbeach_9.07_t2a"             
+ [4] "longbeach_9.07_t2b"              "longbeach_9.07_t2c"              "longbeach_9.14_placebo"         
+ [7] "longbeach_9.14_T1"               "longbeach_9.14_T2a"              "longbeach_9.14_T2b"             
+[10] "longbeach_9.14_T2c"              "santamonica_8.26_placebo"        "santamonica_8.26_t1"            
+[13] "santamonica_8.26_t2a"            "santamonica_8.26_t2b"            "santamonica_8.26_t2c"           
+[16] "beverlyhills_10.12_placebo"      "beverlyhills_10.12_t1"           "beverlyhills_10.12_t2"          
+[19] "beverlyhills_10.12_t3"           "culvercity_12.10_placebo"        "culvercity_12.10_t1"            
+[22] "culvercity_12.10_t2"             "culvercity_12.10_t3"             "manhattanbeach_11.02_placebo"   
+[25] "manhattanbeach_11.02_t1"         "manhattanbeach_11.02_t2"         "manhattanbeach_11.02_t3"        
+[28] "norwalk_11.02_placebo"           "norwalk_11.02_t1"                "norwalk_11.02_t3"               
+[31] "norwalk_11.02_t2"                "ranchopalosverdes_10.19_placebo" "ranchopalosverdes_10.19_t1"     
+[34] "ranchopalosverdes_10.19_t2"      "ranchopalosverdes_10.19_t3"      "santamonica_10.12_t3"           
+[37] "santamonica_10.12_placebo"       "santamonica_10.12_t1"            "santamonica_10.12_t2"           
+[40] "sierramadre_11.09_placebo"       "sierramadre_11.09_t1"            "sierramadre_11.09_t2"           
+[43] "sierramadre_11.09_t3"            "whittier_10.12_placebo"          "whittier_10.12_t1"              
+[46] "whittier_10.12_t2"               "whittier_10.12_t3"              
+
+> city_n <- all %>% 
++   mutate(meeting = case_when(
++     str_detect(filename, "longbeach_9.07") ~ "Long Beach 9/7",
++     str_detect(filename, "longbeach_9.14") ~ "Long Beach 9/14",
++     str_detect(filename, "santamonica_8.26") ~ "Santa Monica 8/26",
++     str_detect(filename, "beverlyhills_10.12") ~ "Beverly Hills 10/12",
++     str_detect(filename, "santamonica_10.12") ~ "Santa Monica 10/12",
++     str_detect(filename, "whittier_10.12") ~ "Whittier 10/12",
++     str_detect(filename, "ranchopalosverdes_10.19") ~ "Rancho Palos Verdes 10/19",
++     str_detect(filename, "manhattanbeach_11.02") ~ "Manhattan Beach 11/02",
++     str_detect(filename, "norwalk_11.02") ~ "Norwalk 11/02",
++     str_detect(filename, "sierramadre_11.09") ~ "Sierra Madre 11/09",
++     str_detect(filename, "culvercity_12.10") ~ "Culver City 12/10"
++   )) %>%
++   group_by(meeting, opened) %>% 
++   summarize(n = n()) %>%
++   filter(opened == 1) %>%
++   select(meeting, n)
+
+> # Merge number of observations with estimates for each city
+> city_cace <- left_join(meta_cace, city_n)
+
+> # Format data for table export
+> city_cace <- city_cace %>%
++   filter(meeting != "Fixed-effects", meeting != "Random-effects") %>%
++   mutate(`95% CI` = 
++            paste0("[", round(conf.low, 3), " , ", round(conf.high, 3), "]")
++   ) %>%
++   select(Meeting = meeting, CACE = estimate, `95% CI`, N = n)
+
+> # Create Table A9: Export using stargazer
+> stargazer::stargazer(city_cace,
++                      #out = "tables/tblA9.tex",
++                      title= "CACEs for each city council meeting",
++                      label = "city_cace",
++                      digits = 3,
++                      column.sep.width = "30pt",
++                      rownames = FALSE, 
++                      summary = FALSE,
++                      notes = "\\parbox[t]{\\textwidth}{\\footnotesize \\textit{Note:} Standard errors in parenthesis. Figures rounded to nearest thousandth decimal place. N is equal to the number of compliers in each city.}"
++ )
+
+% Table created by stargazer v.5.2.3 by Marek Hlavac, Social Policy Institute. E-mail: marek.hlavac at gmail.com
+% Date and time: Tue, Aug 22, 2023 - 16:43:25
+\begin{table}[!htbp] \centering 
+  \caption{CACEs for each city council meeting} 
+  \label{city_cace} 
+\begin{tabular}{@{\extracolsep{30pt}} cccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+Meeting & CACE & 95\% CI & N \\ 
+\hline \\[-1.8ex] 
+Long Beach 9/7 & $1.375$ & [0.031 , 2.719] & $346$ \\ 
+Long Beach 9/14 & $0.460$ & [-0.061 , 0.981] & $727$ \\ 
+Beverly Hills 10/12 & $1.714$ & [-0.227 , 3.655] & $194$ \\ 
+Santa Monica 10/12 & $0.893$ & [0.47 , 1.317] & $2,102$ \\ 
+Whittier 10/12 & $0.556$ & [-0.216 , 1.327] & $396$ \\ 
+Rancho Palos Verdes 10/19 & $3.704$ & [-1.495 , 8.902] & $57$ \\ 
+Manhattan Beach 11/02 & $0$ & [-2.742 , 2.742] & $70$ \\ 
+Norwalk 11/02 & $1.695$ & [-0.223 , 3.613] & $213$ \\ 
+Sierra Madre 11/09 & $0$ & [-6.034 , 6.034] & $31$ \\ 
+Culver City 12/10 & $1.439$ & [0.031 , 2.847] & $318$ \\ 
+Santa Monica 8/26 & $0$ & [-2.119 , 2.119] & $91$ \\ 
+\hline \\[-1.8ex] 
+\multicolumn{4}{l}{\parbox[t]{\textwidth}{\footnotesize \textit{Note:} Standard errors in parenthesis. Figures rounded to nearest thousandth decimal place. N is equal to the number of compliers in each city.}} \\ 
+\end{tabular} 
+\end{table} 
+
+> # Meta analysis estimates ------------------------------------------------------
+> # Create row labels
+> Value = 
++   c("Weighted fixed effects, w/ pilot studies", 
++     "" ,
++     "Random effects, w/ pilot studies", 
++     "" ,
++     "Weighted fixed effects, w/o pilot studies", 
++     "" ,
++     "Random effects, w/o pilot studies", 
++     "" )
+
+> # Populate rows with point estimates and standard errors
+> Estimate = 
++   c(round(fe_cace$beta[1], 3), 
++     paste0("(", format(unlist(round(fe_cace$se, 3))),")"), 
++     round(re_cace$beta[1], 3), 
++     paste0("(", format(unlist(round(re_cace$se, 3))),")"),
++     round(fe_cace_nopilot$beta[1], 3), 
++     paste0("(", format(unlist(round(fe_cace_nopilot$se, 3))),")"), 
++     round(re_cace_nopilot$beta[1], 3), 
++     paste0("(", format(unlist(round(re_cace_nopilot$se, 3))),")"))
+
+> # Create confidence intervals
+> `95% CI` = 
++   c(paste0("[", round(fe_cace$ci.lb, 3), " , ", round(fe_cace$ci.ub, 3), "]"),
++     "", 
++     paste0("[", round(re_cace$ci.lb, 3), " , ", round(re_cace$ci.ub, 3), "]"),
++     "",
++     paste0("[", round(fe_cace_nopilot$ci.lb, 3), " , ", round(fe_cace_nopilot$ci.ub, 3), "]"),
++     "", 
++     paste0("[", round(re_cace_nopilot$ci.lb, 3), " , ", round(re_cace_nopilot$ci.ub, 3), "]"),
++     "")
+
+> # Number of observations
+> N =   c("4545", "" , "4545", "" , "3381", "" , "3381", "" )
+
+> # Combine into dataframe
+> meta = data.frame(Value, Estimate, `95% CI`, N, check.names = FALSE)
+
+> # Create Table A10: Export using stargazer
+> stargazer::stargazer(meta,
++                      #out = "tables/tblA10.tex",
++                      title= "Meta-analysis estimates",
++                      label = "meta",
++                      digits = 3,
++                      column.sep.width = "30pt",
++                      rownames = FALSE, 
++                      summary = FALSE,
++                      notes = "\\parbox[t]{\\textwidth}{\\footnotesize \\textit{Note:} Standard errors in parenthesis. N is equal to the number of compliers.}"
++ )
+
+% Table created by stargazer v.5.2.3 by Marek Hlavac, Social Policy Institute. E-mail: marek.hlavac at gmail.com
+% Date and time: Tue, Aug 22, 2023 - 16:43:25
+\begin{table}[!htbp] \centering 
+  \caption{Meta-analysis estimates} 
+  \label{meta} 
+\begin{tabular}{@{\extracolsep{30pt}} cccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+Value & Estimate & 95\% CI & N \\ 
+\hline \\[-1.8ex] 
+Weighted fixed effects, w/ pilot studies & 0.008 & [0.005 , 0.011] & 4545 \\ 
+ & (0.001) &  &  \\ 
+Random effects, w/ pilot studies & 0.008 & [0.005 , 0.011] & 4545 \\ 
+ & (0.001) &  &  \\ 
+Weighted fixed effects, w/o pilot studies & 0.009 & [0.006 , 0.012] & 3381 \\ 
+ & (0.002) &  &  \\ 
+Random effects, w/o pilot studies & 0.009 & [0.006 , 0.012] & 3381 \\ 
+ & (0.002) &  &  \\ 
+\hline \\[-1.8ex] 
+\multicolumn{4}{l}{\parbox[t]{\textwidth}{\footnotesize \textit{Note:} Standard errors in parenthesis. N is equal to the number of compliers.}} \\ 
+\end{tabular} 
+\end{table} 
+
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # DESCRIPTION ----
+> # ______________________________________________________________________________
+> 
+> # Last updated 16 August, 2023 by Trevor Incerti
+> 
+> # This file combines conducts all analyses included in the discussion section
+> # Creates Figure 5 and Table 1
+> 
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # LIBRARIES ----
+> # ______________________________________________________________________________
+> 
+> # Load libraries
+> library(tidyverse)
+
+> library(DeclareDesign)
+
+> library(modelsummary)
+
+> library(kableExtra)
+
+> library(formattable)
+
+> # Options
+> options(scipen=999)
+
+> # Functions
+> source("code/0. functions.R")
+
+> # Import comment data
+> comments <- read_csv("data/comments.csv")
+[1mindexing[0m [34mcomments.csv[0m [=======================================================================================] [32m529.04GB/s[0m, eta: [36m 0s[0m                                                                                                                                                                       
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # SPOKEN VS WRITTEN, PRO VS. ANTI HOUSING, AND PRE-WRITTEN VS CUSTOM ----
+> # ______________________________________________________________________________
+> 
+> # Create pre-written comment variable
+> comments <- comments %>%
++   mutate(prewritten_comment = if_else(custom_comment == 0 & written_comment == 1, 1, 0))
+
+> #### Percentages: spoken vs written, pre-written vs. custom ####
+> percent_written = sum(comments$written_comment)/sum(comments$comment)
+
+> percent_custom = sum(comments$custom_comment)/sum(comments$comment)
+
+> percent_custom_written <- comments %>% filter(spoken_comment != 1)
+
+> percent_custom_written = sum(percent_custom_written$custom_comment)/sum(percent_custom_written$comment)
+
+> percent_anti = sum(comments$anti_comment)/sum(comments$comment)
+
+> #### Run analyses ####
+> pro_anti_custom_cace <- list(
++   "Spoken comment" = lm_robust(spoken_comment ~ treated, 
++                             data = comments, subset = opened == 1, clusters = address),
++   "Written comment" = lm_robust(written_comment ~ treated, 
++                             data = comments, subset = opened == 1, clusters = address),
++   "Pro-housing" = lm_robust(pro_comment ~ treated, 
++                          data = comments, subset = opened == 1, clusters = address),
++   "Anti-housing" = lm_robust(anti_comment ~ treated, 
++                           data = comments, subset = opened == 1, clusters = address),
++   "Custom" = lm_robust(custom_comment ~ treated, 
++                     data = comments, subset = opened == 1, clusters = address),
++   "Pre-written" = lm_robust(prewritten_comment ~ treated, 
++                        data = comments, subset = opened == 1, clusters = address)
++ )
+
+> ##### Create Figure 5: CACE by type of comment ####
+> modelplot(pro_anti_custom_cace, coef_map = treatments, 
++           coef_omit = "Constant", draw = F) %>%
++   filter(term != "Constant") %>%
++   mutate(
++     type = case_when(
++       model == "Spoken comment" | model == "Written comment" ~ "Spoken vs written comments",
++       model == "Anti-housing" | model == "Pro-housing" ~ "Pro vs anti housing comments",
++       model == "Custom" | model == "Pre-written" ~ "Pre-written vs custom comments")) %>%
++   filter(term != "(Intercept)") %>%
++   mutate(term = model) %>%
++   mutate(across(estimate:conf.high, ~ . * 100)) %>%
++   ggplot(aes(x = estimate, y = model, group = model)) +
++   facet_wrap(~factor(type, levels=c("Spoken vs written comments",
++                                     "Pre-written vs custom comments",
++                                     "Pro vs anti housing comments"
++                                     )), 
++              nrow = 3, scales = "free") +
++   gglayers + .... [TRUNCATED] 
+
+> #ggsave(file="figs/fg5.pdf", height = 3, width = 7)
+> 
+> ##### Create Table A12: Complier average causal effects by outcome ####
+> modelsummary(pro_anti_custom_cace, stars = TRUE,
++              coef_map = c(
++                '(Intercept)' = 'Constant',
++                'treatedTreatment' = 'Treated'
++              ),
++              notes = c("Notes: CATE standard errors clustered at the address level."),
++              gof_omit = omit,
++              output = "latex") %>%
++   kable_styling(latex_options = c("scale_down")) %>%
++   row_spec(c(1,3,5,7), background = '#D3D3D3') #%>%
+\begin{table}
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tabular}[t]{lcccccc}
+\toprule
+  & Spoken comment & Written comment & Pro-housing & Anti-housing & Custom & Pre-written\\
+\midrule
+\cellcolor[HTML]{D3D3D3}{Constant} & \cellcolor[HTML]{D3D3D3}{\num{0.000}} & \cellcolor[HTML]{D3D3D3}{\num{0.000}} & \cellcolor[HTML]{D3D3D3}{\num{0.000}} & \cellcolor[HTML]{D3D3D3}{\num{0.000}} & \cellcolor[HTML]{D3D3D3}{\num{0.000}} & \cellcolor[HTML]{D3D3D3}{\num{0.000}}\\
+ & (\num{0.000}) & (\num{0.000}) & (\num{0.000}) & (\num{0.000}) & (\num{0.000}) & (\num{0.000})\\
+\cellcolor[HTML]{D3D3D3}{Treated} & \cellcolor[HTML]{D3D3D3}{\num{0.001}+} & \cellcolor[HTML]{D3D3D3}{\num{0.010}***} & \cellcolor[HTML]{D3D3D3}{\num{0.009}***} & \cellcolor[HTML]{D3D3D3}{\num{0.001}} & \cellcolor[HTML]{D3D3D3}{\num{0.003}**} & \cellcolor[HTML]{D3D3D3}{\num{0.007}***}\\
+ & (\num{0.001}) & (\num{0.002}) & (\num{0.002}) & (\num{0.000}) & (\num{0.001}) & (\num{0.002})\\
+\midrule
+\cellcolor[HTML]{D3D3D3}{Num.Obs.} & \cellcolor[HTML]{D3D3D3}{\num{3381}} & \cellcolor[HTML]{D3D3D3}{\num{3381}} & \cellcolor[HTML]{D3D3D3}{\num{3381}} & \cellcolor[HTML]{D3D3D3}{\num{3381}} & \cellcolor[HTML]{D3D3D3}{\num{3381}} & \cellcolor[HTML]{D3D3D3}{\num{3381}}\\
+\bottomrule
+\multicolumn{7}{l}{\rule{0pt}{1em}+ p $<$ 0.1, * p $<$ 0.05, ** p $<$ 0.01, *** p $<$ 0.001}\\
+\multicolumn{7}{l}{\rule{0pt}{1em}Notes: CATE standard errors clustered at the address level.}\\
+\end{tabular}}
+\end{table}
+
+>   #save_kable("tables/tblA12.tex")
+> 
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # SUBSTANTIVE CHANGE ----
+> # ______________________________________________________________________________
+> tally <- readxl::read_excel("data/comments_tally.xlsx") %>%
++   select(-City, -Date, -`Treatment pro-housing comments`,
++          -`Comment increase (%)`, -`Pro-housing comment increase (%)`)
+-/                                                                                                                                  /                                                                                                                                  -                                                                                                                                  
+> color_bar <- function (color = "#49CA69", fun = "proportion", ...)
++ {
++   fun <- match.fun(fun)
++   formatter("span", style = function(x) style(display = "inline-block",
++                                               `border-radius` = "0px", `padding-right` = "0px",
++                                               `background-color` = csscolor(color),
++                                               width = percent(fun(as.numeric(gsub(",", "", x)), ...))))
++ }
+
+> perc_scale = function(x) (x/1)
+
+> unit_scale = function(x) (x - min(x)) / (100 - min(x))
+
+> #### Create Table 1: Examination of public comments in treated council meetings
+> readxl::read_excel("data//comments_tally.xlsx") %>%
++   select(-City, -Date, -`Treatment anti-housing comments`,
++          -`Treatment pro-housing comments`,
++          -`Comment increase (%)`, -`Pro-housing comment increase (%)`) %>%
++   mutate(
++     # `Total comments (incl. treatment induced)` = 
++     #   color_bar("deepskyblue")(`Total comments (incl. treatment induced)`),
++     `Pro-housing comments (not incl. treatment induced)` = 
++       color_bar("springgreen", fun = unit_scale)(`Pro-housing comments (not incl. treatment induced)`),
++     `Pro-housing comments (incl. treatment-induced)` = 
++       color_bar("limegreen", fun = unit_scale)(`Pro-housing comments (incl. treatment-induced)`),
++     `Anti-housing comments (incl. treatment-induced)` = 
++       color_bar("orange", fun = unit_scale)(`Anti-housing comments (incl. treatment-induced)`)
++     ) %>%
++   kable("html", escape = F, align = c( .... [TRUNCATED] 
+-/                                                                                                                                  /                                                                                                                                  -                                                                                                                                  
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # DESCRIPTION ----
+> # ______________________________________________________________________________
+> 
+> # Last updated 16 August, 2023 by Trevor Incerti
+> 
+> # This code examines descriptive statistics from the voter file
+> # Creates Appendix Tables A1 and A2
+> # Creates Figure A1
+> 
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # LIBRARIES AND IMPORT ----
+> # ______________________________________________________________________________
+> 
+> # Load libraries
+> library(tidyverse)
+
+> library(DeclareDesign)
+
+> library(modelsummary)
+
+> library(kableExtra)
+
+> library(visdat)
+
+> library(ggridges)
+
+> library(viridis)
+
+> library(gridExtra)
+
+> # Options
+> options(scipen=999)
+
+> # Functions
+> source("code/0. functions.R")
+
+> # Import clened voter file data
+> vf_clean <- readRDS("data/vf_clean.rds")
+
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # PREPARE DATA ----
+> # ______________________________________________________________________________
+> 
+> # Take random sample of data
+> vf_sample <- vf_clean %>% sample_n(10000) 
+
+> # Balance table
+> balance <- vf_clean %>%
++   mutate(likely_renter = if_else(likely_renter == 1, 
++                                  "Confirmed renter", "Not confirmed renter")) %>%
++   select(
++     likely_renter,
++     Email = email,
++     Phone = phone,
++     Age = age,
++     `Years registered` = years_registered,
++     Female = gender,
++     `Speak English` = english,
++     `CA native` = ca_native, 
++     `Year building constructed` = yearbuilt,
++     `Units in building` = units,
++     Democrat = dem,
++     Republican = rep,
++     Independent = npp,
++     `Voted in 2020 general election` = vote_2020_general,
++     `Voted in 2017 municipal election` = vote_2017_municipal,
++     `Voted in 2016 general election` = vote_2016_general
++     )
+
+> # Likely renters only
+> lr <- balance %>% filter(likely_renter == "Confirmed renter") %>%
++   select(-likely_renter)
+
+> # Renter balance variables
+> renter_balance <- balance %>%
++   select(-`Units in building`, -`Year building constructed`)
+
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # COMPARE RENTERS AND NON-RENTERS IN VOTER FILE ----
+> # ______________________________________________________________________________
+> 
+> #### Create Table A1: Balance table renters vs non-renters ####
+> datasummary_balance(
++   ~likely_renter,
++   data = renter_balance,
++   fmt = 2,
++   title = "Balance table: confirmed renters vs. non-confirmed renters",
++   dinm_statistic = "p.value",
++   output = "latex") %>% 
++   row_spec(c(1,3,5,7,9,11, 13), background = '#D3D3D3') %>%
++   kable_styling(latex_options = c("scale_down")) #%>%
+\begin{table}
+
+\caption{Balance table: confirmed renters vs. non-confirmed renters}
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tabular}[t]{lrrrrrr}
+\toprule
+\multicolumn{1}{c}{ } & \multicolumn{2}{c}{Confirmed renter (N=641184)} & \multicolumn{2}{c}{Not confirmed renter (N=5045990)} & \multicolumn{2}{c}{ } \\
+\cmidrule(l{3pt}r{3pt}){2-3} \cmidrule(l{3pt}r{3pt}){4-5}
+  & Mean & Std. Dev. & Mean & Std. Dev. & Diff. in Means & p\\
+\midrule
+\cellcolor[HTML]{D3D3D3}{Email} & \cellcolor[HTML]{D3D3D3}{0.41} & \cellcolor[HTML]{D3D3D3}{0.49} & \cellcolor[HTML]{D3D3D3}{0.34} & \cellcolor[HTML]{D3D3D3}{0.48} & \cellcolor[HTML]{D3D3D3}{-0.07} & \cellcolor[HTML]{D3D3D3}{<0.01}\\
+Phone & 0.52 & 0.50 & 0.52 & 0.50 & 0.00 & <0.01\\
+\cellcolor[HTML]{D3D3D3}{Age} & \cellcolor[HTML]{D3D3D3}{43.39} & \cellcolor[HTML]{D3D3D3}{17.70} & \cellcolor[HTML]{D3D3D3}{47.84} & \cellcolor[HTML]{D3D3D3}{18.90} & \cellcolor[HTML]{D3D3D3}{4.46} & \cellcolor[HTML]{D3D3D3}{<0.01}\\
+Years registered & 3.98 & 6.53 & 6.29 & 9.82 & 2.31 & <0.01\\
+\cellcolor[HTML]{D3D3D3}{Female} & \cellcolor[HTML]{D3D3D3}{0.54} & \cellcolor[HTML]{D3D3D3}{0.50} & \cellcolor[HTML]{D3D3D3}{0.53} & \cellcolor[HTML]{D3D3D3}{0.50} & \cellcolor[HTML]{D3D3D3}{-0.01} & \cellcolor[HTML]{D3D3D3}{<0.01}\\
+Speak English & 0.93 & 0.25 & 0.94 & 0.24 & 0.00 & <0.01\\
+\cellcolor[HTML]{D3D3D3}{CA native} & \cellcolor[HTML]{D3D3D3}{0.48} & \cellcolor[HTML]{D3D3D3}{0.50} & \cellcolor[HTML]{D3D3D3}{0.54} & \cellcolor[HTML]{D3D3D3}{0.50} & \cellcolor[HTML]{D3D3D3}{0.07} & \cellcolor[HTML]{D3D3D3}{<0.01}\\
+Democrat & 0.57 & 0.49 & 0.52 & 0.50 & -0.05 & <0.01\\
+\cellcolor[HTML]{D3D3D3}{Republican} & \cellcolor[HTML]{D3D3D3}{0.11} & \cellcolor[HTML]{D3D3D3}{0.31} & \cellcolor[HTML]{D3D3D3}{0.18} & \cellcolor[HTML]{D3D3D3}{0.38} & \cellcolor[HTML]{D3D3D3}{0.07} & \cellcolor[HTML]{D3D3D3}{<0.01}\\
+Independent & 0.25 & 0.43 & 0.24 & 0.43 & -0.01 & <0.01\\
+\cellcolor[HTML]{D3D3D3}{Voted in 2020 general election} & \cellcolor[HTML]{D3D3D3}{0.69} & \cellcolor[HTML]{D3D3D3}{0.46} & \cellcolor[HTML]{D3D3D3}{0.74} & \cellcolor[HTML]{D3D3D3}{0.44} & \cellcolor[HTML]{D3D3D3}{0.05} & \cellcolor[HTML]{D3D3D3}{<0.01}\\
+Voted in 2017 municipal election & 0.10 & 0.30 & 0.14 & 0.35 & 0.04 & <0.01\\
+\cellcolor[HTML]{D3D3D3}{Voted in 2016 general election} & \cellcolor[HTML]{D3D3D3}{0.43} & \cellcolor[HTML]{D3D3D3}{0.49} & \cellcolor[HTML]{D3D3D3}{0.53} & \cellcolor[HTML]{D3D3D3}{0.50} & \cellcolor[HTML]{D3D3D3}{0.10} & \cellcolor[HTML]{D3D3D3}{<0.01}\\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+>   #save_kable("tables/tblA1.tex")
+> 
+> #### Create Table A2: Balance table email in voter file ####
+> lr <- lr %>%
++   mutate(Email = if_else(Email == 1, "Email listed", "Email not listed")) 
+
+> datasummary_balance(
++   ~Email,
++   data = lr,
++   fmt = 2,
++   title = "Balance table: renters with emails listed in voter file vs. those without",
++   dinm_statistic = "p.value",
++   output = "latex") %>% 
++   row_spec(c(1,3,5,7,9,11,13), background = '#D3D3D3') %>%
++   kable_styling(latex_options = c("scale_down")) #%>%
+\begin{table}
+
+\caption{Balance table: renters with emails listed in voter file vs. those without}
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tabular}[t]{lrrrrrr}
+\toprule
+\multicolumn{1}{c}{ } & \multicolumn{2}{c}{Email listed (N=266057)} & \multicolumn{2}{c}{Email not listed (N=375127)} & \multicolumn{2}{c}{ } \\
+\cmidrule(l{3pt}r{3pt}){2-3} \cmidrule(l{3pt}r{3pt}){4-5}
+  & Mean & Std. Dev. & Mean & Std. Dev. & Diff. in Means & p\\
+\midrule
+\cellcolor[HTML]{D3D3D3}{Phone} & \cellcolor[HTML]{D3D3D3}{0.80} & \cellcolor[HTML]{D3D3D3}{0.40} & \cellcolor[HTML]{D3D3D3}{0.32} & \cellcolor[HTML]{D3D3D3}{0.47} & \cellcolor[HTML]{D3D3D3}{-0.48} & \cellcolor[HTML]{D3D3D3}{<0.01}\\
+Age & 38.43 & 14.75 & 46.91 & 18.75 & 8.48 & <0.01\\
+\cellcolor[HTML]{D3D3D3}{Years registered} & \cellcolor[HTML]{D3D3D3}{1.87} & \cellcolor[HTML]{D3D3D3}{2.99} & \cellcolor[HTML]{D3D3D3}{5.47} & \cellcolor[HTML]{D3D3D3}{7.83} & \cellcolor[HTML]{D3D3D3}{3.59} & \cellcolor[HTML]{D3D3D3}{<0.01}\\
+Female & 0.53 & 0.50 & 0.54 & 0.50 & 0.01 & <0.01\\
+\cellcolor[HTML]{D3D3D3}{Speak English} & \cellcolor[HTML]{D3D3D3}{0.96} & \cellcolor[HTML]{D3D3D3}{0.20} & \cellcolor[HTML]{D3D3D3}{0.92} & \cellcolor[HTML]{D3D3D3}{0.28} & \cellcolor[HTML]{D3D3D3}{-0.04} & \cellcolor[HTML]{D3D3D3}{<0.01}\\
+CA native & 0.52 & 0.50 & 0.44 & 0.50 & -0.08 & <0.01\\
+\cellcolor[HTML]{D3D3D3}{Year building constructed} & \cellcolor[HTML]{D3D3D3}{1967.48} & \cellcolor[HTML]{D3D3D3}{21.55} & \cellcolor[HTML]{D3D3D3}{1966.61} & \cellcolor[HTML]{D3D3D3}{20.93} & \cellcolor[HTML]{D3D3D3}{-0.87} & \cellcolor[HTML]{D3D3D3}{<0.01}\\
+Units in building & 43.41 & 66.82 & 40.60 & 61.00 & -2.81 & <0.01\\
+\cellcolor[HTML]{D3D3D3}{Democrat} & \cellcolor[HTML]{D3D3D3}{0.59} & \cellcolor[HTML]{D3D3D3}{0.49} & \cellcolor[HTML]{D3D3D3}{0.56} & \cellcolor[HTML]{D3D3D3}{0.50} & \cellcolor[HTML]{D3D3D3}{-0.04} & \cellcolor[HTML]{D3D3D3}{<0.01}\\
+Republican & 0.10 & 0.30 & 0.11 & 0.32 & 0.01 & <0.01\\
+\cellcolor[HTML]{D3D3D3}{Independent} & \cellcolor[HTML]{D3D3D3}{0.24} & \cellcolor[HTML]{D3D3D3}{0.43} & \cellcolor[HTML]{D3D3D3}{0.26} & \cellcolor[HTML]{D3D3D3}{0.44} & \cellcolor[HTML]{D3D3D3}{0.02} & \cellcolor[HTML]{D3D3D3}{<0.01}\\
+Voted in 2020 general election & 0.77 & 0.42 & 0.63 & 0.48 & -0.13 & <0.01\\
+\cellcolor[HTML]{D3D3D3}{Voted in 2017 municipal election} & \cellcolor[HTML]{D3D3D3}{0.09} & \cellcolor[HTML]{D3D3D3}{0.29} & \cellcolor[HTML]{D3D3D3}{0.11} & \cellcolor[HTML]{D3D3D3}{0.31} & \cellcolor[HTML]{D3D3D3}{0.02} & \cellcolor[HTML]{D3D3D3}{<0.01}\\
+Voted in 2016 general election & 0.40 & 0.49 & 0.45 & 0.50 & 0.05 & <0.01\\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+>   #save_kable("tables/tblA2.tex")
+> 
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # HOUSING NET WORTH ----
+> # ______________________________________________________________________________
+> 
+> # Import data
+> housing_worth <- readxl::read_excel("data/housing_net_worth.xlsx", sheet = "net_worth")
+-/                                                                                                                                  /                                                                                                                                  -                                                                                                                                  
+> # Housing net worth ------------------------------------------------------------
+> housing_worth %>%
++   mutate(percentile = as.factor(percentile)) %>%
++   ggplot(aes(y = percent_change, x =percentile)) + 
++   geom_bar(position = "dodge", stat = "identity", 
++            width = 0.02, color = "steelblue2", fill = "steelblue2") +
++   geom_point(size = 2, color = "steelblue2") +
++   scale_y_continuous(labels = scales::percent) +
++   geom_hline(yintercept = 0, linetype = "dashed", color = "lightgrey") +
++   facet_wrap(~age) +
++   theme_classic() +
++   theme(
++     legend.position="none",
++     panel.grid.major.y = element_line(colour = "grey95"),
++     panel.spacing = unit(0.1, "lines"),
++     axis.text.x = element_text(size = 10),
++     axis.text.y = element_text(size = 10),
++     plot.title = element_text(size=12)
++   ) +
++   ylab("Percentage change in housing net worth (1983-2013)") +
++   xlab("Income percentile")
+
+> #ggsave(file="figs/fgA1.pdf", height = 5, width = 5)
+> 
+
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # DESCRIPTION ----
+> # ______________________________________________________________________________
+> 
+> # Last updated 16 August, 2023 by Trevor Incerti
+> 
+> # This file examines the random assignments and provides summary statistics
+> # Creates Tables A3 and A4
+> 
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # LIBRARIES AND IMPORT ----
+> # ______________________________________________________________________________
+> 
+> # Load libraries
+> library(tidyverse)
+
+> library(DeclareDesign)
+
+> library(modelsummary)
+
+> library(kableExtra)
+
+> # Functions
+> source("code/0. functions.R")
+
+> # Import data
+> load("data/random_assignment.Rdata")
+
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # SUMMARY STATISTICS ----
+> # ______________________________________________________________________________
+> 
+> # By city
+> cities <- ra_anon %>%
++   group_by(city) %>%
++   summarise(N = n())
+
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # MERGE RANDOM ASSIGNMENT WITH COVARIATE DATA ----
+> # ______________________________________________________________________________
+> 
+> #### Import covariates ####
+> vf_clean <- readRDS("data/vf_clean.rds")
+
+> covs <- vf_clean %>%
++   filter(likely_renter == 1) %>%
++   select(
++     random_id, 
++     Female = gender, 
++     `Speak English` = english, 
++     Age = age, 
++     `Year building constructed` = yearbuilt, 
++     `Units in building` = units, 
++     `Democrat` = dem, 
++     `Republican` = rep, 
++     `Independent` = npp,
++     `Voted in 2020 general election` = vote_2020_general, 
++     `Voted in 2017 municipal election` = vote_2017_municipal, 
++     `Voted in 2016 general election` = vote_2016_general
++   )
+
+> #### Merge outcome data with covariate data ###
+> ra_covs <- left_join(ra_anon, covs, by = c("random_id"))
+
+> # Filter to treated cities
+> treated_cities <- c("SANTA MONICA", "BEVERLY HILLS", "WHITTIER",
++                     "RANCHO PALOS VERDES", "MANHATTAN BEACH",
++                     "NORWALK", "SIERRA MADRE", "CULVER CITY")
+
+> # Create dataframe of treatment vs placebo with block ids
+> ra_covs_tp <- ra_covs %>% 
++   filter(city %in% treated_cities) %>%
++   select(-random_id, -treatment) %>%
++   rename(blocks = city)
+
+> # Create dataframe of all treatments and placebo with block ids
+> ra_covs_all <- ra_covs %>% 
++   filter(city %in% treated_cities) %>%
++   select(-random_id, -treated) %>%
++   rename(blocks = city)
+
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # TABLES ----
+> # ______________________________________________________________________________
+> 
+> # Create Table A3: balance table treatment vs. placebo
+> datasummary_balance(~treated,
++                     data = ra_covs_tp,
++                     fmt = 2, 
++                     dinm_statistic = "p.value",
++                     output = "latex") %>%
++   kable_classic(full_width = F, html_font = "Times New Roman") %>%
++   kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
++                 font_size = 10) %>%
++   kable_styling(latex_options = c("scale_down")) %>%
++   row_spec(c(1,3,5,7,9,11), background = '#D3D3D3') #%>%
+\begin{table}
+\centering
+\fontsize{10}{12}\selectfont
+\resizebox{\linewidth}{!}{
+\begin{tabular}[t]{lrrrrrr}
+\toprule
+\multicolumn{1}{c}{ } & \multicolumn{2}{c}{Placebo (N=2007)} & \multicolumn{2}{c}{Treatment (N=17944)} & \multicolumn{2}{c}{ } \\
+\cmidrule(l{3pt}r{3pt}){2-3} \cmidrule(l{3pt}r{3pt}){4-5}
+  & Mean & Std. Dev. & Mean & Std. Dev. & Diff. in Means & p\\
+\midrule
+\cellcolor[HTML]{D3D3D3}{Female} & \cellcolor[HTML]{D3D3D3}{0.52} & \cellcolor[HTML]{D3D3D3}{0.50} & \cellcolor[HTML]{D3D3D3}{0.53} & \cellcolor[HTML]{D3D3D3}{0.50} & \cellcolor[HTML]{D3D3D3}{0.02} & \cellcolor[HTML]{D3D3D3}{0.11}\\
+Speak English & 0.98 & 0.12 & 0.98 & 0.14 & 0.00 & 0.27\\
+\cellcolor[HTML]{D3D3D3}{Age} & \cellcolor[HTML]{D3D3D3}{41.60} & \cellcolor[HTML]{D3D3D3}{15.76} & \cellcolor[HTML]{D3D3D3}{41.25} & \cellcolor[HTML]{D3D3D3}{15.62} & \cellcolor[HTML]{D3D3D3}{-0.37} & \cellcolor[HTML]{D3D3D3}{0.31}\\
+Year building constructed & 1964.93 & 18.63 & 1964.83 & 18.03 & -0.14 & 0.75\\
+\cellcolor[HTML]{D3D3D3}{Units in building} & \cellcolor[HTML]{D3D3D3}{34.25} & \cellcolor[HTML]{D3D3D3}{64.90} & \cellcolor[HTML]{D3D3D3}{34.39} & \cellcolor[HTML]{D3D3D3}{66.40} & \cellcolor[HTML]{D3D3D3}{0.08} & \cellcolor[HTML]{D3D3D3}{0.96}\\
+Democrat & 0.57 & 0.49 & 0.58 & 0.49 & 0.01 & 0.41\\
+\cellcolor[HTML]{D3D3D3}{Republican} & \cellcolor[HTML]{D3D3D3}{0.13} & \cellcolor[HTML]{D3D3D3}{0.33} & \cellcolor[HTML]{D3D3D3}{0.11} & \cellcolor[HTML]{D3D3D3}{0.32} & \cellcolor[HTML]{D3D3D3}{-0.01} & \cellcolor[HTML]{D3D3D3}{0.21}\\
+Independent & 0.24 & 0.43 & 0.24 & 0.43 & 0.00 & 0.73\\
+\cellcolor[HTML]{D3D3D3}{Voted in 2020 general election} & \cellcolor[HTML]{D3D3D3}{0.79} & \cellcolor[HTML]{D3D3D3}{0.40} & \cellcolor[HTML]{D3D3D3}{0.81} & \cellcolor[HTML]{D3D3D3}{0.40} & \cellcolor[HTML]{D3D3D3}{0.01} & \cellcolor[HTML]{D3D3D3}{0.28}\\
+Voted in 2017 municipal election & 0.10 & 0.30 & 0.09 & 0.29 & -0.01 & 0.28\\
+\cellcolor[HTML]{D3D3D3}{Voted in 2016 general election} & \cellcolor[HTML]{D3D3D3}{0.45} & \cellcolor[HTML]{D3D3D3}{0.50} & \cellcolor[HTML]{D3D3D3}{0.44} & \cellcolor[HTML]{D3D3D3}{0.50} & \cellcolor[HTML]{D3D3D3}{0.00} & \cellcolor[HTML]{D3D3D3}{0.75}\\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+>   #save_kable("tables/tblA3.tex")
+> 
+> # Create Table A4: balance table all treatments vs. placebo
+> datasummary_balance(~treatment,
++                     data = ra_covs_all,
++                     fmt = 2, 
++                     dinm_statistic = "p.value",
++                     output = "latex") %>%
++   kable_classic(full_width = F, html_font = "Times New Roman") %>%
++   kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
++                 font_size = 10) %>%
++   kable_styling(latex_options = c("scale_down")) %>%
++   row_spec(c(1,3,5,7,9,11), background = '#D3D3D3') #%>%
+\begin{table}
+\centering
+\fontsize{10}{12}\selectfont
+\resizebox{\linewidth}{!}{
+\begin{tabular}[t]{lrrrrrrrr}
+\toprule
+\multicolumn{1}{c}{ } & \multicolumn{2}{c}{Placebo (N=2007)} & \multicolumn{2}{c}{Treatment 1 (N=5984)} & \multicolumn{2}{c}{Treatment 2 (N=6002)} & \multicolumn{2}{c}{Treatment 3 (N=5958)} \\
+\cmidrule(l{3pt}r{3pt}){2-3} \cmidrule(l{3pt}r{3pt}){4-5} \cmidrule(l{3pt}r{3pt}){6-7} \cmidrule(l{3pt}r{3pt}){8-9}
+  & Mean & Std. Dev. & Mean & Std. Dev. & Mean & Std. Dev. & Mean & Std. Dev.\\
+\midrule
+\cellcolor[HTML]{D3D3D3}{Female} & \cellcolor[HTML]{D3D3D3}{0.52} & \cellcolor[HTML]{D3D3D3}{0.50} & \cellcolor[HTML]{D3D3D3}{0.52} & \cellcolor[HTML]{D3D3D3}{0.50} & \cellcolor[HTML]{D3D3D3}{0.54} & \cellcolor[HTML]{D3D3D3}{0.50} & \cellcolor[HTML]{D3D3D3}{0.54} & \cellcolor[HTML]{D3D3D3}{0.50}\\
+Speak English & 0.98 & 0.12 & 0.98 & 0.14 & 0.98 & 0.13 & 0.98 & 0.14\\
+\cellcolor[HTML]{D3D3D3}{Age} & \cellcolor[HTML]{D3D3D3}{41.60} & \cellcolor[HTML]{D3D3D3}{15.76} & \cellcolor[HTML]{D3D3D3}{41.16} & \cellcolor[HTML]{D3D3D3}{15.61} & \cellcolor[HTML]{D3D3D3}{41.35} & \cellcolor[HTML]{D3D3D3}{15.63} & \cellcolor[HTML]{D3D3D3}{41.23} & \cellcolor[HTML]{D3D3D3}{15.62}\\
+Year building constructed & 1964.93 & 18.63 & 1964.83 & 17.88 & 1964.83 & 18.33 & 1964.84 & 17.88\\
+\cellcolor[HTML]{D3D3D3}{Units in building} & \cellcolor[HTML]{D3D3D3}{34.25} & \cellcolor[HTML]{D3D3D3}{64.90} & \cellcolor[HTML]{D3D3D3}{34.31} & \cellcolor[HTML]{D3D3D3}{66.10} & \cellcolor[HTML]{D3D3D3}{34.01} & \cellcolor[HTML]{D3D3D3}{66.54} & \cellcolor[HTML]{D3D3D3}{34.86} & \cellcolor[HTML]{D3D3D3}{66.56}\\
+Democrat & 0.57 & 0.49 & 0.58 & 0.49 & 0.60 & 0.49 & 0.58 & 0.49\\
+\cellcolor[HTML]{D3D3D3}{Republican} & \cellcolor[HTML]{D3D3D3}{0.13} & \cellcolor[HTML]{D3D3D3}{0.33} & \cellcolor[HTML]{D3D3D3}{0.11} & \cellcolor[HTML]{D3D3D3}{0.32} & \cellcolor[HTML]{D3D3D3}{0.11} & \cellcolor[HTML]{D3D3D3}{0.31} & \cellcolor[HTML]{D3D3D3}{0.12} & \cellcolor[HTML]{D3D3D3}{0.33}\\
+Independent & 0.24 & 0.43 & 0.25 & 0.43 & 0.24 & 0.43 & 0.24 & 0.43\\
+\cellcolor[HTML]{D3D3D3}{Voted in 2020 general election} & \cellcolor[HTML]{D3D3D3}{0.79} & \cellcolor[HTML]{D3D3D3}{0.40} & \cellcolor[HTML]{D3D3D3}{0.80} & \cellcolor[HTML]{D3D3D3}{0.40} & \cellcolor[HTML]{D3D3D3}{0.81} & \cellcolor[HTML]{D3D3D3}{0.40} & \cellcolor[HTML]{D3D3D3}{0.81} & \cellcolor[HTML]{D3D3D3}{0.39}\\
+Voted in 2017 municipal election & 0.10 & 0.30 & 0.09 & 0.29 & 0.10 & 0.30 & 0.09 & 0.29\\
+\cellcolor[HTML]{D3D3D3}{Voted in 2016 general election} & \cellcolor[HTML]{D3D3D3}{0.45} & \cellcolor[HTML]{D3D3D3}{0.50} & \cellcolor[HTML]{D3D3D3}{0.45} & \cellcolor[HTML]{D3D3D3}{0.50} & \cellcolor[HTML]{D3D3D3}{0.45} & \cellcolor[HTML]{D3D3D3}{0.50} & \cellcolor[HTML]{D3D3D3}{0.43} & \cellcolor[HTML]{D3D3D3}{0.50}\\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+>   #save_kable("tables/tblA4.tex")
+
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # DESCRIPTION ----
+> # ______________________________________________________________________________
+> 
+> # Last updated 16 August, 2023 by Trevor Incerti
+> 
+> # This file analyzes the results from email experiments
+> # Creates Figures A4 and A5
+> # Creates Table A5
+> 
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # LIBRARIES ----
+> # ______________________________________________________________________________
+> 
+> # Load libraries
+> library(tidyverse)
+
+> library(DeclareDesign)
+
+> library(modelsummary)
+
+> library(kableExtra)
+
+> library(formattable)
+
+> library(gridExtra)
+
+> # Options
+> options(scipen=999)
+
+> # Functions
+> source("code/0. functions.R")
+
+> # Import data
+> comments <- read_csv("data/comments.csv")
+[1mindexing[0m [34mcomments.csv[0m [=======================================================================================] [32m529.04GB/s[0m, eta: [36m 0s[0m                                                                                                                                                                       
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # FINAL DATA PREP ----
+> # ______________________________________________________________________________
+> 
+> ##### Create list of covariates for covariate adjustment in estimation ####
+> comments <- comments %>% 
++   mutate(
++     date = case_when(
++       str_detect(filename, "10.12") ~ "10.12"
++     ))
+
+> # Add treated indicator
+> comments <- comments %>% 
++   mutate(received_treatment = ifelse(opened == 1 & treated == "Treatment", 1, 0))
+
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # DIFFERENTIAL COMPLIANCE: BY TREATMENT ----
+> # ______________________________________________________________________________
+> 
+> ##### Opened a message: differential compliance check ##### 
+> # Create table of compliance rates
+> compliance_rates <- comments %>%
++   group_by(treatment, opened) %>%
++   summarize(n = n()) %>%
++   mutate(open_rate = round(n / sum(n), 3)) %>%
++   filter(opened == 1)
+
+> # Differential compliance
+> opened <- lm_robust(opened ~ treatment + city, data = comments)
+
+> # Create Figure A4: Average treatment effect on email opening, all cities
+> modelplot(opened, coef_map = treatments, coef_omit = "Constant", draw = F) %>%
++   ggplot(aes(x = estimate, y = term, group = term)) +
++   gglayers +
++   xlab("Change in opening rate (reference group = placebo)") +
++   scale_x_continuous(limits = c(-0.05, 0.05), breaks = seq(-0.05, 0.05, by = 0.02),
++                      labels = scales::percent_format(accuracy = 1))
+
+> #ggsave(file="figs/fgA4.pdf", height = 2.5, width = 7)
+> 
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # COVARIATE PREDICTIVENESS OF COMPLIANCE BY TREATMENT ----
+> # ______________________________________________________________________________
+> 
+> # Clean covariate names for table production
+> 
+> # Run models of covariates on open rates
+> opened_covs <- list(
++   "Placebo" = lm_robust(opened ~ 
++                           gender + english + age + yearbuilt + units + 
++                           dem + rep + npp + vote_2020_general + 
++                           vote_2017_municipal + vote_2016_general, 
++                         data = comments, subset = treatment == "Placebo"),
++   "Treatment 1" = lm_robust(opened ~ 
++                             gender + english + age + yearbuilt + units + 
++                             dem + rep + npp + vote_2020_general + 
++                             vote_2017_municipal + vote_2016_general, 
++             .... [TRUNCATED] 
+
+> # Create Table A5: Covariate predictiveness of compliance by treatment group 
+> modelsummary(opened_covs, coef_map = cov_map,
++              stars = T, gof_omit = omit, output = 'latex') %>%
++   kable_styling(latex_options = c("striped"), stripe_color = "gray!20") #%>%
+\begin{table}
+\centering
+\begin{tabular}[t]{lcccc}
+\toprule
+  & Placebo & Treatment 1 & Treatment 2 & Treatment 3\\
+\midrule
+\cellcolor{gray!20}{Constant} & \cellcolor{gray!20}{\num{-0.321}} & \cellcolor{gray!20}{\num{-0.535}} & \cellcolor{gray!20}{\num{-0.565}} & \cellcolor{gray!20}{\num{0.216}}\\
+ & (\num{0.980}) & (\num{0.569}) & (\num{0.560}) & (\num{0.563})\\
+\cellcolor{gray!20}{Female} & \cellcolor{gray!20}{\num{-0.028}} & \cellcolor{gray!20}{\num{0.004}} & \cellcolor{gray!20}{\num{-0.012}} & \cellcolor{gray!20}{\num{-0.004}}\\
+ & (\num{0.017}) & (\num{0.010}) & (\num{0.010}) & (\num{0.010})\\
+\cellcolor{gray!20}{Speak English} & \cellcolor{gray!20}{\num{0.009}} & \cellcolor{gray!20}{\num{0.045}} & \cellcolor{gray!20}{\num{-0.020}} & \cellcolor{gray!20}{\num{-0.042}}\\
+ & (\num{0.069}) & (\num{0.031}) & (\num{0.037}) & (\num{0.040})\\
+\cellcolor{gray!20}{Age} & \cellcolor{gray!20}{\num{0.000}} & \cellcolor{gray!20}{\num{0.000}} & \cellcolor{gray!20}{\num{0.000}} & \cellcolor{gray!20}{\num{0.000}}\\
+ & (\num{0.001}) & (\num{0.000}) & (\num{0.000}) & (\num{0.000})\\
+\cellcolor{gray!20}{Year building constructed} & \cellcolor{gray!20}{\num{0.000}} & \cellcolor{gray!20}{\num{0.000}} & \cellcolor{gray!20}{\num{0.000}} & \cellcolor{gray!20}{\num{0.000}}\\
+ & (\num{0.000}) & (\num{0.000}) & (\num{0.000}) & \vphantom{1} (\num{0.000})\\
+\cellcolor{gray!20}{Units in building} & \cellcolor{gray!20}{\num{0.000}} & \cellcolor{gray!20}{\num{0.000}*} & \cellcolor{gray!20}{\num{0.000}} & \cellcolor{gray!20}{\num{0.000}*}\\
+ & (\num{0.000}) & (\num{0.000}) & (\num{0.000}) & (\num{0.000})\\
+\cellcolor{gray!20}{Democrat} & \cellcolor{gray!20}{\num{0.033}} & \cellcolor{gray!20}{\num{0.012}} & \cellcolor{gray!20}{\num{0.033}+} & \cellcolor{gray!20}{\num{0.030}}\\
+ & (\num{0.033}) & (\num{0.020}) & (\num{0.019}) & (\num{0.021})\\
+\cellcolor{gray!20}{Republican} & \cellcolor{gray!20}{\num{0.021}} & \cellcolor{gray!20}{\num{-0.008}} & \cellcolor{gray!20}{\num{0.003}} & \cellcolor{gray!20}{\num{-0.009}}\\
+ & (\num{0.039}) & (\num{0.023}) & (\num{0.023}) & (\num{0.024})\\
+\cellcolor{gray!20}{Independent} & \cellcolor{gray!20}{\num{0.054}} & \cellcolor{gray!20}{\num{0.000}} & \cellcolor{gray!20}{\num{0.017}} & \cellcolor{gray!20}{\num{0.011}}\\
+ & (\num{0.036}) & (\num{0.021}) & (\num{0.021}) & (\num{0.022})\\
+\cellcolor{gray!20}{Voted in 2020 general election} & \cellcolor{gray!20}{\num{0.028}} & \cellcolor{gray!20}{\num{0.031}**} & \cellcolor{gray!20}{\num{0.062}***} & \cellcolor{gray!20}{\num{0.030}*}\\
+ & (\num{0.021}) & (\num{0.012}) & (\num{0.011}) & (\num{0.013})\\
+\cellcolor{gray!20}{Voted in 2017 municipal election} & \cellcolor{gray!20}{\num{0.041}} & \cellcolor{gray!20}{\num{0.057}**} & \cellcolor{gray!20}{\num{0.040}*} & \cellcolor{gray!20}{\num{0.035}+}\\
+ & (\num{0.033}) & (\num{0.020}) & (\num{0.018}) & (\num{0.019})\\
+\cellcolor{gray!20}{Voted in 2016 general election} & \cellcolor{gray!20}{\num{-0.006}} & \cellcolor{gray!20}{\num{0.012}} & \cellcolor{gray!20}{\num{0.002}} & \cellcolor{gray!20}{\num{-0.019}+}\\
+ & (\num{0.019}) & (\num{0.011}) & (\num{0.010}) & (\num{0.011})\\
+\midrule
+\cellcolor{gray!20}{Num.Obs.} & \cellcolor{gray!20}{\num{2007}} & \cellcolor{gray!20}{\num{5984}} & \cellcolor{gray!20}{\num{6002}} & \cellcolor{gray!20}{\num{5958}}\\
+\bottomrule
+\multicolumn{5}{l}{\rule{0pt}{1em}+ p $<$ 0.1, * p $<$ 0.05, ** p $<$ 0.01, *** p $<$ 0.001}\\
+\end{tabular}
+\end{table}
+
+>   #save_kable("tables/tblA5.tex")
+> 
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # DIFFERENTIAL COMPLIANCE: BY COUNCIL MEETING ----
+> # ______________________________________________________________________________
+> 
+> # Estimate compliance by city 
+> compliance_city <- list(
++   "Beverly Hills 10/12" = lm_robust(opened ~ treatment, 
++                                     data = comments, subset = city == "BEVERLY HILLS"),
++   "Santa Monica 10/12" = lm_robust(opened ~ treatment, 
++                                    data = comments, subset = city == "SANTA MONICA"),
++   "Whittier 10/12" = lm_robust(opened ~ treatment, 
++                                data = comments, subset = city == "WHITTIER"),
++   "Rancho Palos Verdes 10/19" = lm_robust(opened ~ treatment, 
++                                data = comments, subset = city == "RANCHO PALOS VERDES"),
++   "Manhattan Beach 11/02" = lm_robust(opened ~ treatment, 
++                                 .... [TRUNCATED] 
+
+> # Create Figure A5: Average treatment effect on email opening, by city
+> modelplot(compliance_city, coef_map = treatments, 
++           coef_omit = "Constant", draw = F) %>%
++   filter(term != "Constant") %>%
++   extract(model, into = c('city', 'date'), remove = F, 
++           regex = '(.*)\\s+([^ ]+)$') %>%
++   arrange(desc(date), city, term) %>%
++   mutate(model = factor(model, levels=unique(model))) %>%
++   
++   ggplot(aes(x = estimate, y = model, group = term, color = term)) +
++   geom_point(size = 1.5, position = position_dodge(width = 0.5)) +
++   scale_color_manual(values = c("seagreen3", "steelblue2", "firebrick")) +
++   geom_errorbarh(aes(y = model, group = term, 
++                      xmin = conf.low, xmax = conf.high),
++                  position = position_dodge(width = 0.5),
++                  color="grey30", size=0.5, alpha = 0.25, height = 0.1) +
++   geom_vline(xintercept = 0, linetype = "dashed") +
++   scale_x_continuous(limits = c(-0.4, 0.4), breaks = seq(-0.4, 0.4, .... [TRUNCATED] 
+
+> #ggsave(file="figs/fgA5.pdf", height = 6, width = 8)
+> 
+
+
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # DESCRIPTION ----
+> # ______________________________________________________________________________
+> 
+> # Last updated 22 August, 2023 by Trevor Incerti
+> 
+> # This file implements the Bayesian analysis referenced in the main text.
+> # Creates Figures A10 and A11. 
+> 
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # LIBRARIES ----
+> # ______________________________________________________________________________
+> 
+> # Load libraries
+> library(tidyverse)
+
+> library(bayestestR)
+
+> library(car)
+
+> library(brms)
+
+> library(gridExtra)
+
+> # Functions
+> source("code/0. functions.R")
+
+> # Import data
+> comments <- read_csv("data/comments.csv")
+[1mindexing[0m [34mcomments.csv[0m [=======================================================================================] [32m694.36GB/s[0m, eta: [36m 0s[0m                                                                                                                                                                       
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # FINAL DATA PREP ----
+> # ______________________________________________________________________________
+> 
+> # Add complier indicator
+> compliers <- comments %>% filter(opened == 1)
+
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # PRIOR DISTRIBUTION FROM PRE-REGISTERED POWER ANALYSIS ----
+> # ______________________________________________________________________________
+> 
+> #### Define priors using distribution from pre-registration power analysis ####
+> priors <- 
++   c(prior(normal(0.004, 0.1), class = b, coef = treatmentTreatment1),
++     prior(normal(0.0077, 0.1), class = b, coef = treatmentTreatment2),
++     prior(normal(0.01, 0.1), class = b, coef = treatmentTreatment3),
++     prior(normal(0.001, 0.01), class = Intercept))
+
+> # Check priors made it into Stan code
+> make_stancode(comment ~ treatment, data = compliers, family = gaussian(),
++               prior = priors)
+// generated with brms 2.19.0
+functions {
+}
+data {
+  int<lower=1> N;  // total number of observations
+  vector[N] Y;  // response variable
+  int<lower=1> K;  // number of population-level effects
+  matrix[N, K] X;  // population-level design matrix
+  int prior_only;  // should the likelihood be ignored?
+}
+transformed data {
+  int Kc = K - 1;
+  matrix[N, Kc] Xc;  // centered version of X without an intercept
+  vector[Kc] means_X;  // column means of X before centering
+  for (i in 2:K) {
+    means_X[i - 1] = mean(X[, i]);
+    Xc[, i - 1] = X[, i] - means_X[i - 1];
+  }
+}
+parameters {
+  vector[Kc] b;  // population-level effects
+  real Intercept;  // temporary intercept for centered predictors
+  real<lower=0> sigma;  // dispersion parameter
+}
+transformed parameters {
+  real lprior = 0;  // prior contributions to the log posterior
+  lprior += normal_lpdf(b[1] | 0.004, 0.1);
+  lprior += normal_lpdf(b[2] | 0.0077, 0.1);
+  lprior += normal_lpdf(b[3] | 0.01, 0.1);
+  lprior += normal_lpdf(Intercept | 0.001, 0.01);
+  lprior += student_t_lpdf(sigma | 3, 0, 2.5)
+    - 1 * student_t_lccdf(0 | 3, 0, 2.5);
+}
+model {
+  // likelihood including constants
+  if (!prior_only) {
+    target += normal_id_glm_lpdf(Y | Xc, Intercept, b, sigma);
+  }
+  // priors including constants
+  target += lprior;
+}
+generated quantities {
+  // actual population-level intercept
+  real b_Intercept = Intercept - dot_product(means_X, b);
+}
+
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # RUN BAYESIAN MIXED MODEL AND CALCULATE EVIDENCE RATIOS ----
+> # ______________________________________________________________________________
+> 
+> # Run model: all treatments
+> bayes_ols_fx = brm(
++   comment ~ treatment + city,
++   data  = compliers,
++   prior = priors,
++   sample_prior = "yes",
++   family = gaussian,
++   cores = 4,
++   seed = 444
++ )
+
+> #### Calculate posterior probability (evidence ratio) under the hypothesis against alternative ####
+> hypothesis(bayes_ols_fx, "treatmentTreatment 3 - treatmentTreatment 1 > 0")
+Hypothesis Tests for class b:
+                Hypothesis Estimate Est.Error CI.Lower CI.Upper Evid.Ratio Post.Prob Star
+1 (treatmentTreatme... > 0     0.01         0        0     0.02      96.56      0.99    *
+---
+'CI': 90%-CI for one-sided and 95%-CI for two-sided hypotheses.
+'*': For one-sided hypotheses, the posterior probability exceeds 95%;
+for two-sided hypotheses, the value tested against lies outside the 95%-CI.
+Posterior probabilities of point hypotheses assume equal prior probabilities.
+
+> hypothesis(bayes_ols_fx, "treatmentTreatment 3 - treatmentTreatment 2 > 0")
+Hypothesis Tests for class b:
+                Hypothesis Estimate Est.Error CI.Lower CI.Upper Evid.Ratio Post.Prob Star
+1 (treatmentTreatme... > 0        0         0        0     0.01       5.06      0.84     
+---
+'CI': 90%-CI for one-sided and 95%-CI for two-sided hypotheses.
+'*': For one-sided hypotheses, the posterior probability exceeds 95%;
+for two-sided hypotheses, the value tested against lies outside the 95%-CI.
+Posterior probabilities of point hypotheses assume equal prior probabilities.
+
+> #### Create Figure A10: Plot coefficients and posterior distributions ####
+> mcmc_plot(bayes_ols_fx, 
++           type = "areas",
++           prob = 0.95,
++           variable = c("b_Intercept", "b_treatmentTreatment1", 
++                        "b_treatmentTreatment2", "b_treatmentTreatment3")) +
++   geom_vline(xintercept = 0, linetype = "dashed") +
++   scale_y_discrete(labels = c("Intercept", "Instructions-only",
++                              "Economic cost", "Costly abstension"))
+
+> #ggsave(file="figs/fgA10.pdf", height = 3, width = 7)
+> 
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # DIFFERENCES IN COEFFICIENTS PLOTS ----
+> # ______________________________________________________________________________
+> 
+> #### Plot: Costly abstention vs. Instructions only ####
+> bfit_post <- posterior_samples(bayes_ols_fx)
+
+> bfit_diff <- bfit_post$b_treatmentTreatment3 - bfit_post$b_treatmentTreatment1
+
+> mp <- as.data.frame(posterior_samples(bayes_ols_fx))
+
+> var1_post <- dplyr::select(mp, b_treatmentTreatment3)
+
+> var2_post <- dplyr::select(mp, b_treatmentTreatment1)
+
+> diff <- as.data.frame(var1_post - var2_post)
+
+> mpost_var1 <- data.frame(post = var1_post, Coefficient = "Costly abstension")
+
+> colnames(mpost_var1) <- c("post", "Coefficient")
+
+> mpost_var2 <- data.frame(post = var2_post, Coefficient = "Instructions only")
+
+> colnames(mpost_var2) <- c("post", "Coefficient")
+
+> mpost_diff <- data.frame(post = diff, Coefficient = "Costly abstension - Instructions only")
+
+> colnames(mpost_diff) <- c("post", "Coefficient")
+
+> mpost_long_df <- rbind(mpost_var1, mpost_var2, mpost_diff)
+
+> mpost_long_df <- mpost_long_df %>% group_by(Coefficient) %>% 
++   mutate(post_mean = mean(post), 
++          post_lwr = quantile(post, probs = .025),
++          post_upr = quantile(post, probs = .975),
++          post_lwr90 = quantile(post, probs = .05),
++          post_upr90 = quantile(post, probs = .95)) %>% ungroup()
+
+> # Create figure A11 (left panel)
+> bayes_t3_t1 <- ggplot(mpost_long_df) +
++   geom_density(aes(x = post, fill = Coefficient), color = "white", alpha = .75) +
++   geom_vline(xintercept = 0, linetype = "dashed") +
++   labs(x = "\nCoefficient", y = "Density\n") +
++   scale_fill_manual(values = c("steelblue2", "seagreen3", "steelblue3")) +
++   scale_color_manual(values = c("steelblue2", "seagreen3", "steelblue3")) +
++   geom_segment(aes(x=post_lwr, xend=post_upr, y=.05, yend=.05), color = "grey25", size = .2) +
++   geom_point(aes(x = post_mean, y = 0.05), color = "grey25", size = 1) +
++   theme_classic() +
++   theme(text=element_text(size=12)) +
++   theme(legend.position="none") +
++   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
++   facet_wrap(~factor(Coefficient, 
++                      levels=c('Costly abstension','Instructions only',
++                               'Costly abstension - Instructions only')), 
++              ncol = 1, strip.position="t ..." ... [TRUNCATED] 
+
+> #### Plot: Costly abstention vs. economic cost ####
+> bfit_post <- posterior_samples(bayes_ols_fx)
+
+> bfit_diff <- bfit_post$b_treatmentTreatment3 - bfit_post$b_treatmentTreatment2
+
+> mp <- as.data.frame(posterior_samples(bayes_ols_fx))
+
+> var1_post <- dplyr::select(mp, b_treatmentTreatment3)
+
+> var2_post <- dplyr::select(mp, b_treatmentTreatment2)
+
+> diff <- as.data.frame(var1_post - var2_post)
+
+> mpost_var1 <- data.frame(post = var1_post, Coefficient = "Costly abstension")
+
+> colnames(mpost_var1) <- c("post", "Coefficient")
+
+> mpost_var2 <- data.frame(post = var2_post, Coefficient = "Economic cost")
+
+> colnames(mpost_var2) <- c("post", "Coefficient")
+
+> mpost_diff <- data.frame(post = diff, Coefficient = "Costly abstension - Economic cost")
+
+> colnames(mpost_diff) <- c("post", "Coefficient")
+
+> mpost_long_df <- rbind(mpost_var1, mpost_var2, mpost_diff)
+
+> mpost_long_df <- mpost_long_df %>% group_by(Coefficient) %>% 
++   mutate(post_mean = mean(post), 
++          post_lwr = quantile(post, probs = .025),
++          post_upr = quantile(post, probs = .975),
++          post_lwr90 = quantile(post, probs = .05),
++          post_upr90 = quantile(post, probs = .95)) %>% ungroup()
+
+> # Create Figure A11 (right panel)
+> bayes_t3_t2 <- ggplot(mpost_long_df) +
++   geom_density(aes(x = post, fill = Coefficient), color = "white", alpha = .75) +
++   geom_vline(xintercept = 0, linetype = "dashed") +
++   labs(x = "\nCoefficient", y = "Density\n") +
++   scale_fill_manual(values = c("steelblue2", "seagreen3", "steelblue3")) +
++   scale_color_manual(values = c("steelblue2", "seagreen3", "steelblue3")) +
++   geom_segment(aes(x=post_lwr, xend=post_upr, y=.05, yend=.05), color = "grey25", size = .2) +
++   geom_point(aes(x = post_mean, y = 0.05), color = "grey25", size = 1) +
++   theme_classic() +
++   theme(text=element_text(size=12)) +
++   theme(legend.position="none") +
++   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
++   facet_wrap(~factor(Coefficient, 
++                      levels=c('Costly abstension','Economic cost',
++                               'Costly abstension - Economic cost')), 
++              ncol = 1, strip.position="top")
+
+> # Create Figure A11: Combine above into two figures and save
+> bayes_hypotheses <- grid.arrange(bayes_t3_t1, bayes_t3_t2, nrow = 1)
+
+> #ggsave(bayes_hypotheses, file="figs/fgA11.pdf", height = 5, width = 7)

@@ -47,6 +47,9 @@ vh_cate <- lm_robust(comment ~ treated + vote_2017_municipal +
 # HETEROGENOUS TREATMENT EFFECTS: RANDOMIZATION INFERENCE  ----
 # ______________________________________________________________________________
 
+# Track time taken to run randomization inference
+start_time <- Sys.time() # Time process: 10.5 hours with 1000 sims
+
 # Calculate difference in CATEs by vote history
 voted = lm_robust(comment ~ treated, fixed_effects = ~city, 
                             data = comments, clusters = address, 
@@ -88,6 +91,9 @@ for (i in seq_along(dic_null)) {
 
 # 4. Calculate two sided p-value (0.062)
 p_vote <- sum(abs(dic_null) >= dic)/length(dic_null)
+
+end_time <- Sys.time()
+end_time - start_time
 
 # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
 # VISUALIZATIONS AND TABULATIONS ----
