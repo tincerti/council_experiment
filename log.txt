@@ -1,6 +1,621 @@
 
 > # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
-> # DESCRIPTION ----
+> # 6. DESCRIPTION ----
+> # ______________________________________________________________________________
+> 
+> # Last updated 16 August, 2023 by Trevor Incerti
+> 
+> # This file analyzes the results from email experiments
+> 
+> # NOTE: NAMES AND AND EMAIL ADDRESSES HAVE BEEN REMOVED FROM THE DATA
+> # HOME ADDRESSES HAVE BEEN CONVERTED TO UNIQUE RANDOM IDS
+> 
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # LIBRARIES ----
+> # ______________________________________________________________________________
+> 
+> # Set seed for randomization inference
+> set.seed(999)
+
+> # Load libraries
+> library(tidyverse)
+
+> library(DeclareDesign)
+
+> library(modelsummary)
+
+> library(kableExtra)
+
+> library(car)
+
+> library(logistf)
+
+> # Options
+> options(scipen=999)
+
+> # Functions
+> source("code/0. functions.R")
+
+> # Import data
+> comments <- read_csv("data/comments.csv")
+[1mindexing[0m [34mcomments.csv[0m [====================================] [32m529.04GB/s[0m, eta: [36m 0s[0m                                                                                                                    
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # FINAL DATA PREP ----
+> # ______________________________________________________________________________
+> 
+> ##### Create list of covariates for covariate adjustment in estimation ####
+> comments <- comments %>% 
++   mutate(
++     date = case_when(
++       str_detect(filename, "10.12") ~ "10.12"
++     ))
+
+> # Add treated indicator
+> comments <- comments %>% 
++   mutate(received_treatment = ifelse(opened == 1 & treated == "Treatment", 1, 0))
+
+> # List of covariates
+> covs = ~ gender + english + age + 
++   yearbuilt + units + dem + rep + npp +
++   vote_2020_general + vote_2017_municipal + vote_2016_general + city
+
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # ANALYSIS: AS ONE EXPERIMENT, ALL TREATMENT VERSUS PLACEBO ----
+> # ______________________________________________________________________________
+> 
+> # Estimate ITT and CACE: Treatment vs. placebo (with covariates)
+> itt_cace <- list(
++   "ITT" = lm_lin(comment ~ treated, covs, 
++                  data = comments, clusters = address),
++   "CACE" = lm_lin(comment ~ treated, covs, 
++                   data = comments, subset = opened == 1, clusters = address)
++ )
+
+> # Estimate ITT and CACE: Treatment vs. placebo (without covariates)
+> itt_cace_nocovs <- list(
++   "ITT" = lm_robust(comment ~ treated + city, 
++                     data = comments, clusters = address),
++   "CACE" = lm_robust(comment ~ treated + city, 
++                      data = comments, subset = opened == 1, clusters = address)
++ )
+
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # ANALYSIS: AS ONE EXPERIMENT, EACH TREATMENT VERSUS PLACEBO ----
+> # ______________________________________________________________________________
+> 
+> # Estimate CACE: All treatments vs. placebo (with covariates)
+> itt_cace_all <- list(
++   "ITT" = lm_lin(comment ~ treatment, covs, 
++                  data = comments, clusters = address),
++   "CACE" = lm_lin(comment ~ treatment, covs, 
++                   data = comments, subset = opened == 1, clusters = address)
++ )
+
+> # Estimate ITT and CACE: All treatments vs. placebo (without covariates)
+> itt_cace_all_nocovs <- list(
++   "ITT" = lm_robust(comment ~ treatment + city,
++                     data = comments, clusters = address),
++   "CACE" = lm_robust(comment ~ treatment + city,
++                      data = comments, subset = opened == 1, clusters = address)
++ )
+
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # ANALYSIS: TREATMENT VERSUS TREATMENT ----
+> # ______________________________________________________________________________
+> 
+> cace = lm_robust(comment ~ treatment, fixed_effects = ~ city,
++                  data = comments, subset = opened == 1, clusters = address)
+
+> linearHypothesis(cace, "treatmentTreatment 3 - treatmentTreatment 2 = 0")
+Linear hypothesis test
+
+Hypothesis:
+- treatmentTreatment 2  + treatmentTreatment 3 = 0
+
+Model 1: restricted model
+Model 2: comment ~ treatment
+
+  Res.Df Df  Chisq Pr(>Chisq)
+1   3371                     
+2   3370  1 0.7357      0.391
+
+> linearHypothesis(cace, "treatmentTreatment 2 - treatmentTreatment 1 = 0")
+Linear hypothesis test
+
+Hypothesis:
+- treatmentTreatment1 treatmentTreatment 2 = 0
+
+Model 1: restricted model
+Model 2: comment ~ treatment
+
+  Res.Df Df  Chisq Pr(>Chisq)
+1   3371                     
+2   3370  1 1.9299     0.1648
+
+> linearHypothesis(cace, "treatmentTreatment 3 - treatmentTreatment 1 = 0")
+Linear hypothesis test
+
+Hypothesis:
+- treatmentTreatment1 treatmentTreatment 3 = 0
+
+Model 1: restricted model
+Model 2: comment ~ treatment
+
+  Res.Df Df  Chisq Pr(>Chisq)  
+1   3371                       
+2   3370  1 4.9624     0.0259 *
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+> # Cost treatments compared to information treatment
+> comments <- comments %>%
++   mutate(
++     cost_treatment = case_when(
++       treatment == "Placebo" ~ "Placebo",
++       treatment == "Treatment 1" ~ "Information",
++       TRUE ~ "Cost"),
++     cost_treatment = factor(cost_treatment, c("Placebo", "Information", "Cost"))
++   )
+
+> cost_any = lm_robust(comment ~ cost_treatment, fixed_effects = ~ city,
++                      data = comments, subset = opened == 1, clusters = address)
+
+> linearHypothesis(cost_any, "cost_treatmentCost - cost_treatmentInformation = 0")
+Linear hypothesis test
+
+Hypothesis:
+- cost_treatmentInformation  + cost_treatmentCost = 0
+
+Model 1: restricted model
+Model 2: comment ~ cost_treatment
+
+  Res.Df Df  Chisq Pr(>Chisq)  
+1   3372                       
+2   3371  1 5.2748    0.02164 *
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # CREATE FIGURES ----
+> # ______________________________________________________________________________
+> 
+> #### Coefficient plots ####
+> # Create Figure 1: All treatment vs. placebo
+> modelplot(itt_cace, coef_map = treatments, 
++           coef_omit = "Constant", draw = F) %>%
++   filter(term != "Constant") %>%
++   mutate(term = model) %>%
++   mutate(model = fct_reorder(model, c("IIT", "CACE"))) %>%
++   mutate(across(estimate:conf.high, ~ . * 100)) %>%
++   ggplot(aes(x = estimate, y = model, group = model)) +
++   gglayers +
++   scale_x_continuous(limits = c(-0.5, 2.5), breaks = seq(-0.5, 2.5, by = 0.5))
+
+> #ggsave(file="figs/fg1.pdf", height = 1.5, width = 7)
+> 
+> # Create Figure A6: All treatments vs. placebo without adjustment
+> modelplot(itt_cace_nocovs, coef_map = treatments, 
++           coef_omit = "Constant", draw = F) %>%
++   filter(term != "Constant") %>%
++   mutate(term = model) %>%
++   mutate(model = fct_reorder(model, c("IIT", "CACE"))) %>%
++   mutate(across(estimate:conf.high, ~ . * 100)) %>%
++   ggplot(aes(x = estimate, y = model, group = model)) +
++   gglayers +
++   scale_x_continuous(limits = c(-0.5, 2.5), breaks = seq(-0.5, 2.5, by = 0.5))
+
+> #ggsave(file="figs/fgA6.pdf", height = 1.5, width = 7)
+> 
+> # Create Figure 3: Each treatment vs. placebo
+> modelplot(itt_cace_all, coef_map = treatments, 
++           coef_omit = "Constant", draw = F) %>%
++   filter(term != "Constant") %>%
++   mutate(term = fct_reorder(term, -estimate)) %>%
++   mutate(across(estimate:conf.high, ~ . * 100)) %>%
++   ggplot(aes(x = estimate, y = term, group = term)) +
++   facet_wrap(~ model, nrow = 2) +
++   gglayers +
++   scale_x_continuous(limits = c(-0.5, 2.5), breaks = seq(-0.5, 2.5, by = 0.5))
+
+> #ggsave(file="figs/fg3.pdf", height = 3, width = 7)
+> 
+> # Create Figure A7: Each treatment vs. placebo without adjustment
+> modelplot(itt_cace_all_nocovs, coef_map = treatments, 
++           coef_omit = "Constant", draw = F) %>%
++   filter(term != "Constant") %>%
++   mutate(term = fct_reorder(term, -estimate)) %>%
++   mutate(across(estimate:conf.high, ~ . * 100)) %>%
++   ggplot(aes(x = estimate, y = term, group = term)) +
++   facet_wrap(~ model, nrow = 2) +
++   gglayers +
++   scale_x_continuous(limits = c(-0.5, 2.5), breaks = seq(-0.5, 2.5, by = 0.5))
+
+> #ggsave(file="figs/fgA7.pdf", height = 3.5, width = 7)
+> 
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # CREATE TABLES ----
+> # ______________________________________________________________________________
+> 
+> # Combine lists into one table
+> table <- c(itt_cace, itt_cace_nocovs, itt_cace_all, itt_cace_all_nocovs)
+
+> names(table)[1] <- "ITT cov"
+
+> names(table)[2] <- "CACE cov"
+
+> names(table)[3] <- "ITT nocov"
+
+> names(table)[4] <- "CACE nocov"
+
+> names(table)[5] <- "ITT all cov"
+
+> names(table)[6] <- "CACE all cov"
+
+> names(table)[7] <- "ITT all nocov"
+
+> names(table)[8] <- "CACE all nocov"
+
+> itt_table <- c(table[1], table[3], table[5], table[7])
+
+> cace_table <- c(table[2], table[4], table[6], table[8])
+
+> # Add covariate adjustment indicator
+> rows <- tribble(~term, ~treat_cov,  ~treat_nocov, ~all_cov, ~all_nocov,
++                 'Covariate adjustment:', 'Yes', 'No', 'Yes', 'No')
+
+> attr(rows, 'position') <- 16
+
+> # Create Table A6: Intent-to-treat effects
+> modelsummary(itt_table, 
++              coef_map = treatments,
++              statistic = c("({std.error})",
++                            "conf.int"), 
++              stars = TRUE, gof_omit = omit, add_rows = rows, fmt = 4,
++              notes = c("Notes: Standard errors clustered at the address level in parentheses. 95 percent confidence intervals in brackets."),
++              output = "latex") %>%
++   kable_styling(latex_options = c("scale_down")) %>%
++   row_spec(c(1,4,7,10,13), background = '#D3D3D3') %>%
++   add_header_above(c(" " = 1, "All treatment groups vs. placebo" = 2, 
++                      "Individual treatments vs. placebo" = 2)) #%>%
+\begin{table}
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tabular}[t]{lcccc}
+\toprule
+\multicolumn{1}{c}{ } & \multicolumn{2}{c}{All treatment groups vs. placebo} & \multicolumn{2}{c}{Individual treatments vs. placebo} \\
+\cmidrule(l{3pt}r{3pt}){2-3} \cmidrule(l{3pt}r{3pt}){4-5}
+  & ITT cov & ITT nocov & ITT all cov & ITT all nocov\\
+\midrule
+\cellcolor[HTML]{D3D3D3}{Constant} & \cellcolor[HTML]{D3D3D3}{\num{0.0005}} & \cellcolor[HTML]{D3D3D3}{\num{0.0005}} & \cellcolor[HTML]{D3D3D3}{\num{0.0005}} & \cellcolor[HTML]{D3D3D3}{\num{0.0005}}\\
+ & (\num{0.0005}) & (\num{0.0013}) & (\num{0.0005}) & (\num{0.0013})\\
+ & {}[\num{-0.0005}, \num{0.0015}] & {}[\num{-0.0021}, \num{0.0031}] & {}[\num{-0.0005}, \num{0.0015}] & {}[\num{-0.0022}, \num{0.0031}]\\
+\cellcolor[HTML]{D3D3D3}{Treated} & \cellcolor[HTML]{D3D3D3}{\num{0.0020}**} & \cellcolor[HTML]{D3D3D3}{\num{0.0020}**} & \cellcolor[HTML]{D3D3D3}{} & \cellcolor[HTML]{D3D3D3}{}\\
+ & (\num{0.0006}) & (\num{0.0006}) &  & \\
+ & {}[\num{0.0008}, \num{0.0032}] & {}[\num{0.0007}, \num{0.0032}] &  & \\
+\cellcolor[HTML]{D3D3D3}{Instructions-only treatment} & \cellcolor[HTML]{D3D3D3}{} & \cellcolor[HTML]{D3D3D3}{} & \cellcolor[HTML]{D3D3D3}{\num{0.0012}} & \cellcolor[HTML]{D3D3D3}{\num{0.0011}}\\
+ &  &  & (\num{0.0007}) & (\num{0.0007})\\
+ &  &  & {}[\num{-0.0003}, \num{0.0026}] & {}[\num{-0.0003}, \num{0.0026}]\\
+\cellcolor[HTML]{D3D3D3}{Economic cost treatment} & \cellcolor[HTML]{D3D3D3}{} & \cellcolor[HTML]{D3D3D3}{} & \cellcolor[HTML]{D3D3D3}{\num{0.0021}*} & \cellcolor[HTML]{D3D3D3}{\num{0.0021}*}\\
+ &  &  & (\num{0.0008}) & (\num{0.0009})\\
+ &  &  & {}[\num{0.0004}, \num{0.0038}] & {}[\num{0.0004}, \num{0.0038}]\\
+\cellcolor[HTML]{D3D3D3}{Costly abstention treatment} & \cellcolor[HTML]{D3D3D3}{} & \cellcolor[HTML]{D3D3D3}{} & \cellcolor[HTML]{D3D3D3}{\num{0.0026}**} & \cellcolor[HTML]{D3D3D3}{\num{0.0027}**}\\
+ &  &  & (\num{0.0009}) & (\num{0.0009})\\
+ &  &  & {}[\num{0.0009}, \num{0.0044}] & {}[\num{0.0009}, \num{0.0044}]\\
+\midrule
+Covariate adjustment: & Yes & No & Yes & No\\
+Num.Obs. & \num{19951} & \num{19951} & \num{19951} & \num{19951}\\
+\bottomrule
+\multicolumn{5}{l}{\rule{0pt}{1em}+ p $<$ 0.1, * p $<$ 0.05, ** p $<$ 0.01, *** p $<$ 0.001}\\
+\multicolumn{5}{l}{\rule{0pt}{1em}Notes: Standard errors clustered at the address level in parentheses. 95 percent confidence intervals in brackets.}\\
+\end{tabular}}
+\end{table}
+
+>   #save_kable("tables/tblA6.tex")
+> 
+> # Create Table A7: Complier average causal effects
+> modelsummary(cace_table, 
++              coef_map = treatments,
++              statistic = c("({std.error})",
++                            "conf.int"), 
++              stars = TRUE, gof_omit = omit, add_rows = rows, fmt = 4,
++              notes = c("Notes: Standard errors clustered at the address level in parentheses. 95 percent confidence intervals in brackets."), 
++              output = "latex") %>%
++   kable_styling(latex_options = c("scale_down")) %>%
++   row_spec(c(1,4,7,10,13), background = '#D3D3D3') %>%
++   add_header_above(c(" " = 1, "All treatment groups vs. placebo" = 2, 
++                      "Individual treatments vs. placebo" = 2)) #%>%
+\begin{table}
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tabular}[t]{lcccc}
+\toprule
+\multicolumn{1}{c}{ } & \multicolumn{2}{c}{All treatment groups vs. placebo} & \multicolumn{2}{c}{Individual treatments vs. placebo} \\
+\cmidrule(l{3pt}r{3pt}){2-3} \cmidrule(l{3pt}r{3pt}){4-5}
+  & CACE cov & CACE nocov & CACE all cov & CACE all nocov\\
+\midrule
+\cellcolor[HTML]{D3D3D3}{Constant} & \cellcolor[HTML]{D3D3D3}{\num{0.0000}} & \cellcolor[HTML]{D3D3D3}{\num{0.0061}} & \cellcolor[HTML]{D3D3D3}{\num{0.0000}} & \cellcolor[HTML]{D3D3D3}{\num{0.0063}}\\
+ & (\num{0.0000}) & (\num{0.0086}) & (\num{0.0000}) & (\num{0.0086})\\
+ & {}[\num{0.0000}, \num{0.0000}] & {}[\num{-0.0106}, \num{0.0229}] & {}[\num{0.0000}, \num{0.0000}] & {}[\num{-0.0105}, \num{0.0231}]\\
+\cellcolor[HTML]{D3D3D3}{Treated} & \cellcolor[HTML]{D3D3D3}{\num{0.0102}***} & \cellcolor[HTML]{D3D3D3}{\num{0.0104}***} & \cellcolor[HTML]{D3D3D3}{} & \cellcolor[HTML]{D3D3D3}{}\\
+ & (\num{0.0018}) & (\num{0.0019}) &  & \\
+ & {}[\num{0.0067}, \num{0.0138}] & {}[\num{0.0066}, \num{0.0141}] &  & \\
+\cellcolor[HTML]{D3D3D3}{Instructions-only treatment} & \cellcolor[HTML]{D3D3D3}{} & \cellcolor[HTML]{D3D3D3}{} & \cellcolor[HTML]{D3D3D3}{\num{0.0054}*} & \cellcolor[HTML]{D3D3D3}{\num{0.0052}*}\\
+ &  &  & (\num{0.0025}) & (\num{0.0023})\\
+ &  &  & {}[\num{0.0006}, \num{0.0103}] & {}[\num{0.0006}, \num{0.0097}]\\
+\cellcolor[HTML]{D3D3D3}{Economic cost treatment} & \cellcolor[HTML]{D3D3D3}{} & \cellcolor[HTML]{D3D3D3}{} & \cellcolor[HTML]{D3D3D3}{\num{0.0101}**} & \cellcolor[HTML]{D3D3D3}{\num{0.0106}**}\\
+ &  &  & (\num{0.0032}) & (\num{0.0033})\\
+ &  &  & {}[\num{0.0039}, \num{0.0163}] & {}[\num{0.0041}, \num{0.0171}]\\
+\cellcolor[HTML]{D3D3D3}{Costly abstention treatment} & \cellcolor[HTML]{D3D3D3}{} & \cellcolor[HTML]{D3D3D3}{} & \cellcolor[HTML]{D3D3D3}{\num{0.0144}***} & \cellcolor[HTML]{D3D3D3}{\num{0.0148}***}\\
+ &  &  & (\num{0.0036}) & (\num{0.0037})\\
+ &  &  & {}[\num{0.0073}, \num{0.0215}] & {}[\num{0.0075}, \num{0.0222}]\\
+\midrule
+Covariate adjustment: & Yes & No & Yes & No\\
+Num.Obs. & \num{3381} & \num{3381} & \num{3381} & \num{3381}\\
+\bottomrule
+\multicolumn{5}{l}{\rule{0pt}{1em}+ p $<$ 0.1, * p $<$ 0.05, ** p $<$ 0.01, *** p $<$ 0.001}\\
+\multicolumn{5}{l}{\rule{0pt}{1em}Notes: Standard errors clustered at the address level in parentheses. 95 percent confidence intervals in brackets.}\\
+\end{tabular}}
+\end{table}
+
+>   #save_kable("tables/tblA7.tex")
+> 
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # ROBUSTNESS: PENALIZED LIKELIHOOD ----
+> # ______________________________________________________________________________
+> 
+> # Run penalized maximum likelihood models
+> pl <- list(
++   "ITT" = 
++     logistf(comment ~ treated, data = comments),
++   "CACE" = 
++     logistf(comment ~ treated, data = comments[which(comments$opened==1),]),
++   "ITT " = 
++     logistf(comment ~ treatment, data = comments),
++   "CACE " = 
++     logistf(comment ~ treatment, data = comments[which(comments$opened==1),])
++ )
+
+> # Export to table
+> modelsummary(pl, 
++              coef_map = treatments,
++              statistic = c("({std.error})", "conf.int"), 
++              stars = TRUE, gof_omit = omit, fmt = 4,
++              notes = c("Notes: Standard errors clustered at the address level in parentheses. 95 percent confidence intervals in brackets."),
++              output = "latex") %>%
++     row_spec(c(1,4,7,10,13), background = '#D3D3D3') %>%
++   kable_styling(latex_options = c("scale_down")) %>%
++   add_header_above(c(" " = 1, "All treatment groups vs. placebo" = 2, 
++                      "Individual treatments vs. placebo" = 2)) #%>%
+\begin{table}
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tabular}[t]{lcccc}
+\toprule
+\multicolumn{1}{c}{ } & \multicolumn{2}{c}{All treatment groups vs. placebo} & \multicolumn{2}{c}{Individual treatments vs. placebo} \\
+\cmidrule(l{3pt}r{3pt}){2-3} \cmidrule(l{3pt}r{3pt}){4-5}
+  & ITT & CACE & ITT  & CACE \\
+\midrule
+\cellcolor[HTML]{D3D3D3}{Constant} & \cellcolor[HTML]{D3D3D3}{\num{-7.1987}***} & \cellcolor[HTML]{D3D3D3}{\num{-6.5439}***} & \cellcolor[HTML]{D3D3D3}{\num{-7.1987}***} & \cellcolor[HTML]{D3D3D3}{\num{-6.5439}***}\\
+ & (\num{0.8168}) & (\num{1.4152}) & (\num{0.8168}) & (\num{1.4152})\\
+ & {}[\num{-9.3648}, \num{-5.9318}] & {}[\num{-11.3781}, \num{-4.6301}] & {}[\num{-9.3648}, \num{-5.9318}] & {}[\num{-11.3781}, \num{-4.6301}]\\
+\cellcolor[HTML]{D3D3D3}{Treated} & \cellcolor[HTML]{D3D3D3}{\num{1.2239}+} & \cellcolor[HTML]{D3D3D3}{\num{1.9864}*} & \cellcolor[HTML]{D3D3D3}{} & \cellcolor[HTML]{D3D3D3}{}\\
+ & (\num{0.8302}) & (\num{1.4265}) &  & \\
+ & {}[\num{-0.0850}, \num{3.4045}] & {}[\num{0.0265}, \num{6.8285}] &  & \\
+\cellcolor[HTML]{D3D3D3}{Instructions-only treatment} & \cellcolor[HTML]{D3D3D3}{} & \cellcolor[HTML]{D3D3D3}{} & \cellcolor[HTML]{D3D3D3}{\num{0.8548}} & \cellcolor[HTML]{D3D3D3}{\num{1.3414}}\\
+ &  &  & (\num{0.8733}) & (\num{1.4784})\\
+ &  &  & {}[\num{-0.5931}, \num{3.0816}] & {}[\num{-0.8391}, \num{6.2197}]\\
+\cellcolor[HTML]{D3D3D3}{Economic cost treatment} & \cellcolor[HTML]{D3D3D3}{} & \cellcolor[HTML]{D3D3D3}{} & \cellcolor[HTML]{D3D3D3}{\num{1.3048}+} & \cellcolor[HTML]{D3D3D3}{\num{2.0372}+}\\
+ &  &  & (\num{0.8532}) & (\num{1.4489})\\
+ &  &  & {}[\num{-0.0776}, \num{3.5102}] & {}[\num{-0.0157}, \num{6.8950}]\\
+\cellcolor[HTML]{D3D3D3}{Costly abstention treatment} & \cellcolor[HTML]{D3D3D3}{} & \cellcolor[HTML]{D3D3D3}{} & \cellcolor[HTML]{D3D3D3}{\num{1.4797}*} & \cellcolor[HTML]{D3D3D3}{\num{2.3874}*}\\
+ &  &  & (\num{0.8477}) & (\num{1.4368})\\
+ &  &  & {}[\num{0.1150}, \num{3.6792}] & {}[\num{0.3850}, \num{7.2367}]\\
+\midrule
+Num.Obs. & \num{19951} & \num{3381} & \num{19951} & \num{3381}\\
+\bottomrule
+\multicolumn{5}{l}{\rule{0pt}{1em}+ p $<$ 0.1, * p $<$ 0.05, ** p $<$ 0.01, *** p $<$ 0.001}\\
+\multicolumn{5}{l}{\rule{0pt}{1em}Notes: Standard errors clustered at the address level in parentheses. 95 percent confidence intervals in brackets.}\\
+\end{tabular}}
+\end{table}
+
+>   #save_kable("tables/tblA14.tex")
+
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # 7. DESCRIPTION ----
+> # ______________________________________________________________________________
+> 
+> # Last updated 16 August, 2023 by Trevor Incerti
+> 
+> # This file analyzes the results from email experiments
+> 
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # LIBRARIES ----
+> # ______________________________________________________________________________
+> 
+> # Load libraries
+> library(tidyverse)
+
+> library(DeclareDesign)
+
+> library(modelsummary)
+
+> library(kableExtra)
+
+> library(formattable)
+
+> library(gridExtra)
+
+> # Options
+> options(scipen=999)
+
+> set.seed(999)
+
+> # Functions
+> source("code/0. functions.R")
+
+> # Import data
+> comments <- read_csv("data/comments.csv")
+[1mindexing[0m [34mcomments.csv[0m [====================================] [32m529.04GB/s[0m, eta: [36m 0s[0m                                                                                                                    
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # FINAL DATA PREP ----
+> # ______________________________________________________________________________
+> 
+> comments <- comments %>% mutate(treated = ifelse(treated == "Placebo", 0, 1))
+
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # HETEROGENOUS TREATMENT EFFECTS: CONDITIONAL AVERAGE TREATMENT EFFECTS ----
+> # ______________________________________________________________________________
+> 
+> # Vote history in local elections
+> vh_cate <- lm_robust(comment ~ treated + vote_2017_municipal + 
++                        treated:vote_2017_municipal + city,
++                      data = comments, subset = opened == 1, clusters = address)
+
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # HETEROGENOUS TREATMENT EFFECTS: RANDOMIZATION INFERENCE  ----
+> # ______________________________________________________________________________
+> 
+> # Track time taken to run randomization inference
+> start_time <- Sys.time() # Time process: 10.5 hours with 1000 sims
+
+> # Calculate difference in CATEs by vote history
+> voted = lm_robust(comment ~ treated, fixed_effects = ~city, 
++                             data = comments, clusters = address, 
++                             subset = opened == 1 & vote_2017_municipal == 1)
+
+> abstained = lm_robust(comment ~ treated, fixed_effects = ~city, 
++                       data = comments, clusters = address, 
++                       subset = opened == 1 & vote_2017_municipal == 0)
+
+> dic <- abs(voted$coefficients[[1]] - abstained$coefficients[[1]])
+
+> # Use randomization inference to test null that CATEs in both groups equal ATE
+> sims = 10000
+
+> null <- comments
+
+> dic_null <- vector(mode = "integer", length = sims)
+
+> # 1. # Form full schedule of potential outcomes assuming constant effects
+> null$ate = lm_robust(comment ~ treated, fixed_effects = ~city, 
++                      data = comments, clusters = address, 
++                      subset = opened == 1)$coefficients[1]
+
+> null$comment_null = with(null, ifelse(treated == 1, comment + ate, comment))
+
+> for (i in seq_along(dic_null)) { 
++   
++   # 2. Assign subjects randomly to treatment or control
++   null$z_null <-
++     block_and_cluster_ra(
++       blocks = comments$city,
++       clusters = comments$address,
++       conditions = c("Placebo", "Treatment 1", "Treatment 2", "Treatment 3"),
++       prob_each = c(0.1, 0.3, 0.3, 0.3)
++     )
++   
++   # 3. Calculate difference between estimated CATEs
++   vote_null = lm(comment_null ~ z_null, data = null, subset = vote_2017_municipal == 1)
++   abstain_null = lm(comment_null ~ z_null, data = null, subset = vote_2017_municipal == 0)
++   dic_null[[i]] <- abs(vote_null$coefficients[[2]] - abstain_null$coefficients[[2]])
++   
++   # Print number of simulations completed
++   message('Processing image ', i, ' of ', length(sims))
++ }
+
+> # 4. Calculate two sided p-value (0.062)
+> p_vote <- sum(abs(dic_null) >= dic)/length(dic_null)
+
+> p_vote
+[1] 0.0622
+
+> end_time <- Sys.time()
+
+> end_time - start_time
+Time difference of 13.92022 mins
+
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # VISUALIZATIONS AND TABULATIONS ----
+> # ______________________________________________________________________________
+> 
+> #### Coefficient plot ####
+> # Perform CATE analysis using subgroup method rather than interactions
+> vote_cate <- list(
++   "Voted in 2017 municipal election" = 
++     lm_robust(comment ~ treated, fixed_effects = ~city, 
++               data = comments, clusters = address, 
++               subset = opened == 1 & vote_2017_municipal == 1),
++   
++   "Did not vote in 2017 municipal election" = 
++     lm_robust(comment ~ treated, fixed_effects = ~city, 
++               data = comments, clusters = address,
++               subset = opened == 1 & vote_2017_municipal == 0)
++ )
+
+> # Create Figure 4: complier average causal effect by turnout
+> modelplot(vote_cate, coef_map = c('treated' = 'Treated'), 
++           coef_omit = "Constant", draw = F) %>%
++   filter(term != "(Intercept)") %>%
++   mutate(term = model) %>%
++   mutate(across(estimate:conf.high, ~ . * 100)) %>%
++   ggplot(aes(x = estimate, y = model, group = model)) +
++   gglayers +
++   scale_x_continuous(limits = c(0, 5), breaks = seq(0, 5, by = 1))
+
+> #ggsave(file="figs/fg4.pdf", height = 1.5, width = 7)
+> 
+> #### Table ####
+> # Set up table settings
+> vh <- list("CATE" = vh_cate)
+
+> rows <- tribble(~term, ~CATE,
++                 'City fixed effects:', 'Yes')
+
+> attr(rows, 'position') <- 9
+
+> # Create Table 
+> modelsummary(vh, stars = TRUE,
++              coef_map = c(
++                '(Intercept)' = 'Constant',
++                'treated' = 'Treated',
++                'vote_2017_municipal' = 'Voted in 2017 municipal election',
++                'treated:vote_2017_municipal' = 'Treated x Voted'
++              ),
++              notes = c("Notes: CATE standard errors clustered at the address level."),
++              gof_omit = omit,
++              add_rows = rows,
++              output = "latex") %>%
++   row_spec(c(1,3,5,7), background = '#D3D3D3') #%>%
+\begin{table}
+\centering
+\begin{tabular}[t]{lc}
+\toprule
+  & CATE\\
+\midrule
+\cellcolor[HTML]{D3D3D3}{Constant} & \cellcolor[HTML]{D3D3D3}{\num{0.006}}\\
+ & (\num{0.009})\\
+\cellcolor[HTML]{D3D3D3}{Treated} & \cellcolor[HTML]{D3D3D3}{\num{0.009}***}\\
+ & (\num{0.002})\\
+\cellcolor[HTML]{D3D3D3}{Voted in 2017 municipal election} & \cellcolor[HTML]{D3D3D3}{\num{0.000}}\\
+ & (\num{0.001})\\
+\cellcolor[HTML]{D3D3D3}{Treated x Voted} & \cellcolor[HTML]{D3D3D3}{\num{0.014}+}\\
+ & (\num{0.008})\\
+\midrule
+City fixed effects: & Yes\\
+Num.Obs. & \num{3381}\\
+\bottomrule
+\multicolumn{2}{l}{\rule{0pt}{1em}+ p $<$ 0.1, * p $<$ 0.05, ** p $<$ 0.01, *** p $<$ 0.001}\\
+\multicolumn{2}{l}{\rule{0pt}{1em}Notes: CATE standard errors clustered at the address level.}\\
+\end{tabular}
+\end{table}
+
+>   #save_kable("tables/tblA11.tex")
+
+
+
+
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # 8. DESCRIPTION ----
 > # ______________________________________________________________________________
 > 
 > # Last updated 16 August, 2023 by Trevor Incerti
@@ -534,7 +1149,7 @@ Random effects, w/o pilot studies & 0.009 & [0.006 , 0.012] & 3381 \\
 \end{table} 
 
 > # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
-> # DESCRIPTION ----
+> # 9. DESCRIPTION ----
 > # ______________________________________________________________________________
 > 
 > # Last updated 16 August, 2023 by Trevor Incerti
@@ -693,7 +1308,7 @@ Random effects, w/o pilot studies & 0.009 & [0.006 , 0.012] & 3381 \\
 +   kable("html", escape = F, align = c( .... [TRUNCATED] 
 -/                                                                                                                                  /                                                                                                                                  -                                                                                                                                  
 > # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
-> # DESCRIPTION ----
+> # A1. DESCRIPTION ----
 > # ______________________________________________________________________________
 > 
 > # Last updated 16 August, 2023 by Trevor Incerti
@@ -891,7 +1506,7 @@ Voted in 2016 general election & 0.40 & 0.49 & 0.45 & 0.50 & 0.05 & <0.01\\
 > 
 
 > # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
-> # DESCRIPTION ----
+> # A2. DESCRIPTION ----
 > # ______________________________________________________________________________
 > 
 > # Last updated 16 August, 2023 by Trevor Incerti
@@ -1052,7 +1667,7 @@ Voted in 2017 municipal election & 0.10 & 0.30 & 0.09 & 0.29 & 0.10 & 0.30 & 0.0
 >   #save_kable("tables/tblA4.tex")
 
 > # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
-> # DESCRIPTION ----
+> # A3. DESCRIPTION ----
 > # ______________________________________________________________________________
 > 
 > # Last updated 16 August, 2023 by Trevor Incerti
@@ -1230,7 +1845,7 @@ Voted in 2017 municipal election & 0.10 & 0.30 & 0.09 & 0.29 & 0.10 & 0.30 & 0.0
 
 
 > # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
-> # DESCRIPTION ----
+> # A4. DESCRIPTION ----
 > # ______________________________________________________________________________
 > 
 > # Last updated 22 August, 2023 by Trevor Incerti
@@ -1486,3 +2101,437 @@ Posterior probabilities of point hypotheses assume equal prior probabilities.
 > bayes_hypotheses <- grid.arrange(bayes_t3_t1, bayes_t3_t2, nrow = 1)
 
 > #ggsave(bayes_hypotheses, file="figs/fgA11.pdf", height = 5, width = 7)
+
+
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # A5. DESCRIPTION ----
+> # ______________________________________________________________________________
+> 
+> # Last updated 24 August, 2023 by Trevor Incerti
+> 
+> # This file conducts the randomization inference robustness checks
+> 
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # LIBRARIES ----
+> # ______________________________________________________________________________
+> 
+> # Load libraries
+> library(tidyverse)
+
+> library(DeclareDesign)
+
+> library(modelsummary)
+
+> library(kableExtra)
+
+> library(car)
+
+> library(logistf)
+
+> # Options
+> options(scipen=999)
+
+> set.seed(999)
+
+> # Functions
+> source("code/0. functions.R")
+
+> # Import data
+> #email <- read_csv("data/outcomes/sm_outcomes.csv")
+> comments <- read_csv("data/comments.csv")
+[1mindexing[0m [34mcomments.csv[0m [====================================] [32m653.52GB/s[0m, eta: [36m 0s[0m                                                                                                                    
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # FINAL DATA PREP ----
+> # ______________________________________________________________________________
+> 
+> ##### Create list of covariates for covariate adjustment in estimation ####
+> comments <- comments %>% 
++   mutate(
++     date = case_when(
++       str_detect(filename, "10.12") ~ "10.12"
++     ))
+
+> # Add treated indicator
+> comments <- comments %>% 
++   mutate(received_treatment = ifelse(opened == 1 & treated == "Treatment", 1, 0))
+
+> # List of covariates
+> covs = ~ gender + english + age + 
++   yearbuilt + units + dem + rep + npp +
++   vote_2020_general + vote_2017_municipal + vote_2016_general + city
+
+> # Cost treatments compared to information treatment
+> comments <- comments %>%
++   mutate(
++     cost_treatment = case_when(
++       treatment == "Placebo" ~ "Placebo",
++       treatment == "Treatment 1" ~ "Information",
++       TRUE ~ "Cost"),
++     cost_treatment = factor(cost_treatment, c("Placebo", "Information", "Cost"))
++   )
+
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # ROBUSTNESS: RANDOMIZATION INFERENCE (VS PLACEBO) ----
+> # ______________________________________________________________________________
+> 
+> #### CACE ####
+> # Track time taken to run randomization inference:
+> # 1.5 hours with 10,000 sims
+> start_time <- Sys.time() 
+
+> # Set the number of simulated random assignments
+> sims <- 10000
+
+> # Create an empty vector to store our estimates
+> ri_ests_all <- rep(NA, sims)
+
+> t1_ri_ests <- rep(NA, sims)
+
+> t2_ri_ests <- rep(NA, sims)
+
+> t3_ri_ests <- rep(NA, sims)
+
+> for (i in 1:sims) {
++   # Conduct new random assignment accord to same procedure as original
++   comments$ri_assignment <-
++     block_and_cluster_ra(
++       blocks = comments$city,
++       clusters = comments$address,
++       conditions = c("Placebo", "Treatment 1", "Treatment 2", "Treatment 3"),
++       prob_each = c(0.1, 0.3, 0.3, 0.3)
++     )
++   
++   # Create hypothetical "treated" group
++   comments <- comments %>% 
++     mutate(ri_treated = ifelse(ri_assignment != "Placebo", 1, 0))
++   
++   # Calculate effect sizes under simulated random assignment: all treatments
++   ri_est_all <- lm_robust(comment ~ ri_treated, data = comments,
++                           clusters = address, fixed_effects = ~ city,
++                           subset = opened == 1)
++   
++   # Calculate effect sizes under simulated random assignment: each treatment
++   ri_est_each <- lm_robust(comment ~ ri_assignment, data = comments,
++                            clusters = address, fixed_effects = ~ city,
++  .... [TRUNCATED] 
+
+> # Calculate true estimates from actual random assignment
+> true_est_all <- lm_robust(comment ~ treated, data = comments,
++                           clusters = address, fixed_effects = ~ city,
++                           subset = opened == 1)
+
+> true_est_each <- lm_robust(comment ~ treatment, data = comments,
++                            clusters = address, fixed_effects = ~ city,
++                            subset = opened == 1)
+
+> true_est_all <- true_est_all$coefficients[1]
+
+> t1_true_est <- true_est_each$coefficients[1]
+
+> t2_true_est <- true_est_each$coefficients[2]
+
+> t3_true_est <- true_est_each$coefficients[3]
+
+> # Calculate proportion of "fake" random assignments with larger effects
+> p_value_all <- mean(abs(ri_ests_all) > true_est_all)
+
+> p_value_all
+[1] 0.0436
+
+> t1_p_value <- mean(abs(t1_ri_ests) > t1_true_est)
+
+> t1_p_value
+[1] 0.3861
+
+> t2_p_value <- mean(abs(t2_ri_ests) > t2_true_est)
+
+> t2_p_value
+[1] 0.0711
+
+> t3_p_value <- mean(abs(t3_ri_ests) > t3_true_est)
+
+> t3_p_value
+[1] 0.0114
+
+> end_time <- Sys.time()
+
+> end_time - start_time
+Time difference of 1.115962 hours
+
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # ROBUSTNESS: RANDOMIZATION INFERENCE (OTHER COMPARISONS) ----
+> # ______________________________________________________________________________
+> 
+> #### CACE ####
+> # Track time taken to run randomization inference:
+> # 1.5 hours with 10,000 sims
+> start_time <- Sys.time() 
+
+> # Set the number of simulated random assignments
+> sims <- 10000
+
+> # Create an empty vector to store our estimates
+> ri_ests_all <- rep(NA, sims)
+
+> t1_ri_ests <- rep(NA, sims)
+
+> t2_ri_ests <- rep(NA, sims)
+
+> t3_ri_ests <- rep(NA, sims)
+
+> t2_t1_ri_ests <- rep(NA, sims)
+
+> t3_t1_ri_ests <- rep(NA, sims)
+
+> t3_t2_ri_ests <- rep(NA, sims)
+
+> ri_cost_info_ests <- rep(NA, sims)
+
+> for (i in 1:sims) {
++   # Conduct new random assignment according to same procedure as original
++   comments$ri_assignment <-
++     block_and_cluster_ra(
++       blocks = comments$city,
++       clusters = comments$address,
++       conditions = c("Placebo", "Treatment 1", "Treatment 2", "Treatment 3"),
++       prob_each = c(0.1, 0.3, 0.3, 0.3)
++     )
++   
++   # Create hypothetical "treated" group and cost group
++   comments <- comments %>% 
++     mutate(
++       ri_treated = ifelse(ri_assignment != "Placebo", 1, 0),
++       ri_cost = case_when(
++         ri_assignment == "Placebo" ~ "Placebo",
++         ri_assignment == "Treatment 1" ~ "Information",
++         TRUE ~ "Cost"),
++       ri_cost = factor(ri_cost, c("Placebo", "Information", "Cost")))
++   
++   # Calculate effect sizes under simulated random assignment: each treatment
++   ri_est_each <- lm_robust(comment ~ ri_assignment, data = comments,
++                            clusters = address, fixed_effects = ~ city,
++             .... [TRUNCATED] 
+
+> # Calculate true estimates from actual random assignment
+> true_est_each <- lm_robust(comment ~ treatment, data = comments,
++                            clusters = address, fixed_effects = ~ city,
++                            subset = opened == 1)
+
+> true_est_cost <- lm_robust(comment ~ cost_treatment, data = comments, 
++                            clusters = address, fixed_effects = ~ city,
++                            subset = opened == 1)
+
+> t2_t1_true_est <- summary(true_est_each)$coefficients[2] - summary(true_est_each)$coefficients[1]
+
+> t3_t1_true_est <- summary(true_est_each)$coefficients[3] - summary(true_est_each)$coefficients[1]
+
+> t3_t2_true_est <- summary(true_est_each)$coefficients[3] - summary(true_est_each)$coefficients[2]
+
+> cost_info_true_est <- summary(true_est_cost)$coefficients[2] - summary(true_est_cost)$coefficients[1]
+
+> # Calculate proportion of "fake" random assignments with larger effects
+> t2_t1_p_value <- mean(abs(t2_t1_ri_ests) > t2_t1_true_est)
+
+> t2_t1_p_value
+[1] 0.1922
+
+> t3_t1_p_value <- mean(abs(t3_t1_ri_ests) > t3_t1_true_est)
+
+> t3_t1_p_value
+[1] 0.0265
+
+> t3_t2_p_value <- mean(abs(t3_t2_ri_ests) > t3_t2_true_est)
+
+> t3_t2_p_value
+[1] 0.3154
+
+> cost_info_p_value <- mean(abs(ri_cost_info_ests) > cost_info_true_est)
+
+> cost_info_p_value
+[1] 0.0396
+
+> end_time <- Sys.time()
+
+> end_time - start_time
+Time difference of 1.366178 hours
+
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # ROBUSTNESS: RANDOMIZATION INFERENCE, ITT (VS PLACEBO) ----
+> # ______________________________________________________________________________
+> 
+> # Track time taken to run randomization inference
+> start_time <- Sys.time() # Time process: 3 hours with 1000 sims
+
+> # Set the number of simulated random assignments
+> sims <- 1000
+
+> # Create an empty vector to store our estimates
+> ri_ests_all <- rep(NA, sims)
+
+> t1_ri_ests <- rep(NA, sims)
+
+> t2_ri_ests <- rep(NA, sims)
+
+> t3_ri_ests <- rep(NA, sims)
+
+> for (i in 1:sims) {
++   # Conduct new random assignment accord to same procedure as original
++   comments$ri_assignment <-
++     block_and_cluster_ra(
++       blocks = comments$city,
++       clusters = comments$address,
++       conditions = c("Placebo", "Treatment 1", "Treatment 2", "Treatment 3"),
++       prob_each = c(0.1, 0.3, 0.3, 0.3)
++     )
++   
++   # Create hypothetical "treated" group
++   comments <- comments %>% 
++     mutate(ri_treated = ifelse(ri_assignment != "Placebo", 1, 0))
++   
++   # Calculate effect sizes under simulated random assignment: all treatments
++   ri_est_all <- lm_robust(comment ~ ri_treated, data = comments,
++                           clusters = address, fixed_effects = ~ city)
++   
++   # Calculate effect sizes under simulated random assignment: all treatments
++   ri_est_each <- lm_robust(comment ~ ri_assignment, data = comments,
++                            clusters = address, fixed_effects = ~ city)
++   
++   # Store estimates of treatment effect from  .... [TRUNCATED] 
+
+> # Calculate true estimates from actual random assignment
+> true_est_all <- lm_robust(comment ~ treated, data = comments,
++                           clusters = address, fixed_effects = ~ city)
+
+> true_est_each <- lm_robust(comment ~ treatment, data = comments,
++                            clusters = address, fixed_effects = ~ city)
+
+> true_est_all <- true_est_all$coefficients[1]
+
+> t1_true_est <- true_est_each$coefficients[1]
+
+> t2_true_est <- true_est_each$coefficients[2]
+
+> t3_true_est <- true_est_each$coefficients[3]
+
+> # Calculate proportion of "fake" random assignments with larger effects
+> p_value_all_itt <- mean(abs(ri_ests_all) > true_est_all)
+
+> p_value_all_itt
+[1] 0.091
+
+> t1_p_value_itt <- mean(abs(t1_ri_ests) > t1_true_est)
+
+> t1_p_value_itt
+[1] 0.403
+
+> t2_p_value_itt <- mean(abs(t2_ri_ests) > t2_true_est)
+
+> t2_p_value_itt
+[1] 0.098
+
+> t3_p_value_itt <- mean(abs(t3_ri_ests) > t3_true_est)
+
+> t3_p_value_itt
+[1] 0.033
+
+> end_time <- Sys.time()
+
+> end_time - start_time
+Time difference of 3.22323 hours
+
+> # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+> # ROBUSTNESS: RANDOMIZATION INFERENCE, ITT (ALL OTHER COMPARISONS) ----
+> # ______________________________________________________________________________
+> 
+> # Track time taken to run randomization inference
+> start_time <- Sys.time() # Time process: 3 hours with 1000 sims
+
+> # Set the number of simulated random assignments
+> sims <- 1000
+
+> # Create an empty vector to store our estimates
+> ri_ests_all <- rep(NA, sims)
+
+> t1_ri_ests <- rep(NA, sims)
+
+> t2_ri_ests <- rep(NA, sims)
+
+> t3_ri_ests <- rep(NA, sims)
+
+> t2_t1_ri_ests <- rep(NA, sims)
+
+> t3_t1_ri_ests <- rep(NA, sims)
+
+> t3_t2_ri_ests <- rep(NA, sims)
+
+> ri_cost_info_ests <- rep(NA, sims)
+
+> for (i in 1:sims) {
++   # Conduct new random assignment accord to same procedure as original
++   comments$ri_assignment <-
++     block_and_cluster_ra(
++       blocks = comments$city,
++       clusters = comments$address,
++       conditions = c("Placebo", "Treatment 1", "Treatment 2", "Treatment 3"),
++       prob_each = c(0.1, 0.3, 0.3, 0.3)
++     )
++   
++   # Create hypothetical "treated" group and cost group
++   comments <- comments %>% 
++     mutate(
++       ri_treated = ifelse(ri_assignment != "Placebo", 1, 0),
++       ri_cost = case_when(
++         ri_assignment == "Placebo" ~ "Placebo",
++         ri_assignment == "Treatment 1" ~ "Information",
++         TRUE ~ "Cost"),
++       ri_cost = factor(ri_cost, c("Placebo", "Information", "Cost")))
++   
++   # Calculate effect sizes under simulated random assignment: each treatment
++   ri_est_each <- lm_robust(comment ~ ri_assignment, data = comments,
++                            clusters = address, fixed_effects = ~ city)
++   
++   # Calcu .... [TRUNCATED] 
+
+> # Calculate true estimates from actual random assignment
+> true_est_each <- lm_robust(comment ~ treatment, data = comments,
++                            clusters = address, fixed_effects = ~ city)
+
+> true_est_cost <- lm_robust(comment ~ cost_treatment, data = comments, 
++                            clusters = address, fixed_effects = ~ city)
+
+> t2_t1_true_est <- summary(true_est_each)$coefficients[2] - summary(true_est_each)$coefficients[1]
+
+> t3_t1_true_est <- summary(true_est_each)$coefficients[3] - summary(true_est_each)$coefficients[1]
+
+> t3_t2_true_est <- summary(true_est_each)$coefficients[3] - summary(true_est_each)$coefficients[2]
+
+> cost_info_true_est <- summary(true_est_cost)$coefficients[2] - summary(true_est_cost)$coefficients[1]
+
+> # Calculate proportion of "fake" random assignments with larger effects
+> t2_t1_p_value_itt <- mean(abs(t2_t1_ri_ests) > t2_t1_true_est)
+
+> t2_t1_p_value_itt
+[1] 0.277
+
+> t3_t1_p_value_itt <- mean(abs(t3_t1_ri_ests) > t3_t1_true_est)
+
+> t3_t1_p_value_itt
+[1] 0.087
+
+> t3_t2_p_value_itt <- mean(abs(t3_t2_ri_ests) > t3_t2_true_est)
+
+> t3_t2_p_value_itt
+[1] 0.532
+
+> cost_info_p_value_itt <- mean(abs(ri_cost_info_ests) > cost_info_true_est)
+
+> cost_info_p_value_itt
+[1] 0.112
+
+> end_time <- Sys.time()
+
+> end_time - start_time
+Time difference of 3.943757 hours
+
+
+

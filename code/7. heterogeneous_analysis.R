@@ -87,10 +87,14 @@ for (i in seq_along(dic_null)) {
   vote_null = lm(comment_null ~ z_null, data = null, subset = vote_2017_municipal == 1)
   abstain_null = lm(comment_null ~ z_null, data = null, subset = vote_2017_municipal == 0)
   dic_null[[i]] <- abs(vote_null$coefficients[[2]] - abstain_null$coefficients[[2]])
+  
+  # Print number of simulations completed
+  message('Processing image ', i, ' of ', length(sims))
 }
 
 # 4. Calculate two sided p-value (0.062)
 p_vote <- sum(abs(dic_null) >= dic)/length(dic_null)
+p_vote
 
 end_time <- Sys.time()
 end_time - start_time
