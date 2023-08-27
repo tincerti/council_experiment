@@ -81,11 +81,15 @@ a3. differential_compliance.R
 - Creates Figure A5: Average treatment effect on email opening, by city
 - Creates Table A5: Covariate predictiveness of compliance by treatment group 
 
-a4. bayes. R
+a4. bayes.R
 - Implements the Bayesian analysis referenced in the main text
 - Calculates evidence ratios referenced on p. 11. 
 - Creates Figure A10: Bayesian multilevel model: coefficient estimates and posterior distributions 
 - Creates Figure A11: Posterior distributions of costly abstention treatment, instructions only treatment, and difference. 
+
+a5. ri.R
+- Implements the randomization inference robustness checks described in the main text and listed in Table A13. 
+- Calculates the randomization inference p values listed in Table A13. 
 
 ### Data Files (relative path "~/data")
 
