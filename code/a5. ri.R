@@ -2,7 +2,7 @@
 # DESCRIPTION ----
 # ______________________________________________________________________________
 
-# Last updated 24 January, 2023 by Trevor Incerti
+# Last updated 24 August, 2023 by Trevor Incerti
 
 # This file conducts the randomization inference robustness checks
 

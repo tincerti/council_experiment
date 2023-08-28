@@ -33,7 +33,7 @@ set.seed(999)
 # IMPORT VOTER FILE DATA ----
 # ______________________________________________________________________________
 
-vf <- read_delim("data/voter_file/Countywide_EID4193 3577 3496_Ct.txt",
+vf <- read_delim("data/Countywide_EID4193 3577 3496_Ct.txt",
                  "\t", escape_double = FALSE, trim_ws = TRUE)
 
 # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯

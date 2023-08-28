@@ -13,9 +13,6 @@
 # LIBRARIES ----
 # ______________________________________________________________________________
 
-# Set seed for randomization inference
-set.seed(999)
-
 # Load libraries
 library(tidyverse)
 library(DeclareDesign)

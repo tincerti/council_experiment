@@ -42,22 +42,12 @@ rm(vf_all_renters)
 # REDUCE DATASET TO MERGES WITH POSTERIOR PROBABILITY OF 99% OR GREATER ----
 # ______________________________________________________________________________
 
-# Examine posteriors to and hand check to find probability threshold
-# renter_sample <- vf_clean %>% 
-#   filter(likely_renter == 1) %>%
-#   select(house_number:zip, address, posterior) %>%
-#   sample_n(100) %>%
-#   arrange(posterior)
-
-# Virtually no matches with posterior less than 0.9997069 are correct: remove
 vf_clean <- vf_clean %>%
   mutate(likely_renter = ifelse(posterior < 0.999 | is.na(likely_renter), 0, 1))
 
 # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
 # REMOVE UNNEEDED VARIABLES TO SAVE MEMORY ----
 # ______________________________________________________________________________
-
-# object_size(vf_clean) # 2,098,844,728 B
 
 # Remove unneeded variables
 vf_clean <- vf_clean %>%
@@ -69,8 +59,6 @@ vf_clean <- vf_clean %>%
     -house_fraction, # Level of precision not needed
     -posterior, -gamma.1, -gamma.2, -gamma.3, -gamma.4 # Fastlink variables
   )
-
-# object_size(vf_clean) # 1,910,482,336 B
 
 # ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
 # CLEAN COVARIATES ----
