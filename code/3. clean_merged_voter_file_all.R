@@ -32,7 +32,7 @@ source("code/0. functions.R")
 set.seed(999) 
 
 # Load data frame
-load("data/cleaned/vf_all_renters.Rdata")
+load("data/vf_all_renters.Rdata")
 vf_clean <- vf_all_renters
 
 # Remove original dataframe to save memory
@@ -150,4 +150,4 @@ vf_clean <- vf_clean %>%
 # ______________________________________________________________________________
 
 # Save cleaned data
-save(vf_clean, file = "data/cleaned/vf_clean.Rdata")
+save(vf_clean, file = "data/vf_clean.Rdata")

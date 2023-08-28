@@ -112,4 +112,4 @@ vf_reduced_merge <- left_join(vf_reduced_merge, vf_renters)
 vf_all_renters <- vf_reduced_merge %>%
   distinct(across(name_last:vh_2017_municipal), .keep_all = TRUE)
 
-save(vf_all_renters, file = "data/cleaned/vf_all_renters.Rdata")
+save(vf_all_renters, file = "data/vf_all_renters.Rdata")

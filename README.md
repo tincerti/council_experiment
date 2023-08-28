@@ -2,7 +2,7 @@
 
 Replication code and data for "Countering capture in local politics: Evidence from eight field experiments."
 
-Note that while replication code is available for the creation of the identified renter sample (i.e., merging the voter file with Los Angeles Department of City Planning records of multi- unit housing developments), the full voter file cannot be provided for both legal and ethical reasons. However, the data output from scripts 1-5 are available in anonymized form and can be used to replicate all analyses by running scripts 6-9 and a1-a4.
+Note that while replication code is available for the creation of the identified renter sample (i.e., merging the voter file with Los Angeles Department of City Planning records of multi- unit housing developments), the full voter file cannot be provided for both legal and ethical reasons. However, the final data output from scripts 1-5 is available in anonymized form and all analyses in the main text and appendix can be replicated by running scripts 6-9 and a1-a5.
 
 Code run using R version 4.3.0 (2023-04-21) on macOS Ventura 13.4. 
 
@@ -49,6 +49,7 @@ Code run using R version 4.3.0 (2023-04-21) on macOS Ventura 13.4.
 
 7. heterogeneous_analysis.R
 - Calculates heterogeneous treatment effects by vote history. 
+- Note that due to the calculation of a randomization-inference based p value, this script takes approximately 15 minutes to run on a 2022 M2 Macbook Air with 16GB of memory.
 - Creates Figure 4: Complier average causal effects by turnout
 - Calculates results described in the main text on p. 12. 
 
@@ -88,15 +89,16 @@ a4. bayes.R
 - Creates Figure A11: Posterior distributions of costly abstention treatment, instructions only treatment, and difference. 
 
 a5. ri.R
-- Implements the randomization inference robustness checks described in the main text and listed in Table A13. 
+- Implements the randomization inference robustness checks described in the main text and listed in Table A13. Note that due to the large number of simulations, this script takes approximately 12 hours to run on a 2022 M2 Macbook Air with 16GB of memory.
 - Calculates the randomization inference p values listed in Table A13. 
 
 ### Data Files (relative path "~/data")
 
 Replication data:
-
+(relative path "~/data")
 - vf_clean.RDS (Anonymized voter file containing only randomly ordered IDs and covariates). 
 - random_assignment.Rdata (Anonymized random assignment data containing only random IDs, city, and treatment assignment). 
 - pilot_outcomes.csv (Outcomes from pilot studies displayed in meta-analysis). 
 - comments.csv (Main outcome data file including treatment group and comment status).
 - comments_tally.csv (Data used to create Table 1). 
+- housing_net_worth.xlsx (Data used to create Figure A1). 
